@@ -36,6 +36,18 @@ jobs:
           # { container: 'ubuntu:22.04', target: g++-powerpc64-linux-gnu, qemu: qemu-ppc64 }
           # { container: 'ubuntu:22.04', target: g++-powerpc64le-linux-gnu, qemu: qemu-ppc64le }
 
+          - { container: 'ubuntu:20.04', target: g++-alpha-linux-gnu, qemu: qemu-alpha }
+          # { container: 'ubuntu:20.04', target: g++-arc-linux-gnu }
+          - { container: 'ubuntu:20.04', target: g++-hppa-linux-gnu, qemu: qemu-hppa }
+          # { container: 'ubuntu:20.04', target: g++-loongarch64-linux-gnu, qemu: qemu-loongarch64 }
+          # { container: 'ubuntu:20.04', target: g++-m68k-linux-gnu, qemu: qemu-m68k }
+          - { container: 'ubuntu:20.04', target: g++-mips64-linux-gnuabi64, qemu: qemu-mips64 }
+          - { container: 'ubuntu:20.04', target: g++-mips64el-linux-gnuabi64, qemu: qemu-mips64el }
+          # { container: 'ubuntu:20.04', target: g++-riscv64-linux-gnu, qemu: qemu-riscv64 }
+          - { container: 'ubuntu:20.04', target: g++-s390x-linux-gnu, qemu: qemu-s390x }
+          # { container: 'ubuntu:20.04', target: g++-sh4-linux-gnu, qemu: qemu-sh4 }
+          # { container: 'ubuntu:20.04', target: g++-sparc64-linux-gnu, qemu: qemu-sparc64 }
+
           - { container: 'ubuntu:22.04', target: g++-alpha-linux-gnu, qemu: qemu-alpha }
           # { container: 'ubuntu:22.04', target: g++-arc-linux-gnu }
           - { container: 'ubuntu:22.04', target: g++-hppa-linux-gnu, qemu: qemu-hppa }
@@ -76,7 +88,7 @@ jobs:
     container: ${{ matrix.container }}
     steps:
       - run: uname -a; pwd; id; umask
-      - name: Install packages
+      - name: ${{ format('Install packages {0}', matrix.container) }}
         run: |
           apt-get update && apt-get upgrade -y
           apt-get install -y --no-install-recommends bash ca-certificates cmake curl file git make parallel tar time tree util-linux xz-utils zstd
@@ -99,12 +111,15 @@ jobs:
             mingw-w64-i686) toolchain=i686-w64-mingw32 ;;
             mingw-w64-x86_64) toolchain=x86_64-w64-mingw32 ;;
           esac
-          echo "toolchain=$toolchain" >> $GITHUB_ENV
           echo "========== $toolchain"
+          echo "toolchain=$toolchain" >> $GITHUB_ENV
           export CC=/usr/bin/${toolchain}-gcc
           export CXX=/usr/bin/${toolchain}-g++
           export CMAKE_AR=/usr/bin/${toolchain}-ar
           export CMAKE_RANLIB=/usr/bin/${toolchain}-ranlib
+          ls -ldF $CC $CXX $CMAKE_AR $CMAKE_RANLIB
+          ls -ldF /usr/bin/*{gcc,g++,ar,ranlib}
+          ls -ldF /usr/bin/${toolchain}*
           case $toolchain in
             # these old architectures do not support sanitize
             alpha-linux-gnu) export UPX_CONFIG_DISABLE_SANITIZE=ON ;;
@@ -118,6 +133,7 @@ jobs:
               CC="$CC -static"; CXX="$CXX -static" ;;
             # avoid warnings about arm libstdc++ ABI change in gcc-7
             arm-linux-*) CXX="$CXX -Wno-psabi" ;;
+            armeb-linux-*) CXX="$CXX -Wno-psabi" ;;
           esac
           make UPX_XTARGET=xtarget/${toolchain} xtarget/all
 
@@ -133,7 +149,7 @@ jobs:
           (cd tmp/artifact && tar --sort=name --zstd -cf "$N.tar.zst" "$N" && rm -rf "./$N" && ls -la && zstd -tq "$N.tar.zst")
           echo "artifact_name=$N" >> $GITHUB_ENV
       - name: ${{ format('Upload artifact {0}', env.artifact_name) }}
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with: { name: '${{ env.artifact_name }}', path: tmp/artifact }
 
       - name: ${{ format('Inspect /usr/{0}', env.toolchain) }}
@@ -142,7 +158,7 @@ jobs:
           set -x
           ls -laF /usr
           ls -laF /usr/${toolchain}
-          ls -laF /usr/${toolchain}/bin
+          ls -laF /usr/${toolchain}/bin*
           ls -laF /usr/${toolchain}/lib*
           tree -sF -d --du /usr/${toolchain}
           tree -sF    --du /usr/${toolchain}
@@ -152,8 +168,8 @@ jobs:
         if: ${{ matrix.qemu }}
         run: |
           export UPX_CONFIG_DISABLE_SELF_PACK_TEST=ON
-          [[ $toolchain == "aarch64-linux-gnu" ]] && export UPX_CONFIG_DISABLE_SELF_PACK_TEST=OFF
-          [[ $toolchain == "riscv64-linux-gnu" ]] && export UPX_CONFIG_DISABLE_SELF_PACK_TEST=OFF
+          [[ $toolchain == aarch64-linux-gnu ]] && export UPX_CONFIG_DISABLE_SELF_PACK_TEST=OFF
+          [[ $toolchain == riscv64-linux-gnu ]] && export UPX_CONFIG_DISABLE_SELF_PACK_TEST=OFF
           export upx_exe_runner="${{ matrix.qemu }}"
           upx_exe_runner="$upx_exe_runner -L /usr/${toolchain}"
           UPX_DEBUG_DOCTEST_VERBOSE=1 $upx_exe_runner ./build/xtarget/${toolchain}/debug/upx --version-short || true
@@ -161,8 +177,8 @@ jobs:
           UPX_DEBUG_DOCTEST_VERBOSE=0 $upx_exe_runner ./build/xtarget/${toolchain}/debug/upx --sysinfo -vv || true
           UPX_DEBUG_DOCTEST_VERBOSE=0 $upx_exe_runner ./build/xtarget/${toolchain}/release/upx --sysinfo -vv || true
           jobs="${toolchain}/debug ${toolchain}/release"
-          #[[ "${{ matrix.container }}" == 'ubuntu:24.04' && "$toolchain" == "alpha-linux-gnu" ]] && jobs="${toolchain}/release"
-          [[ "$toolchain" == "alpha-linux-gnu" ]] && jobs="${toolchain}/release"
+          #[[ "${{ matrix.container }}" == "ubuntu:24.04" && $toolchain == alpha-linux-gnu ]] && jobs="${toolchain}/release"
+          [[ $toolchain == alpha-linux-gnu ]] && jobs="${toolchain}/release"
           echo "===== parallel jobs: $jobs"
           parallel -kv --lb 'cd build/xtarget/{} && bash ../../../../misc/testsuite/mimic_ctest.sh' ::: $jobs
           ls -ld ./build/*/*/*/upx-* || true
@@ -175,7 +191,7 @@ jobs:
           upx_exe_runner="$upx_exe_runner -L /usr/${toolchain}"
           export upx_testsuite_SRCDIR="$(readlink -en ../deps/upx-testsuite)"
           jobs="${toolchain}/debug ${toolchain}/release"
-          [[ "$toolchain" == "alpha-linux-gnu" ]] && jobs="${toolchain}/release"
+          [[ $toolchain == alpha-linux-gnu ]] && jobs="${toolchain}/release"
           echo "===== parallel jobs: $jobs"
           parallel -kv --lb 'cd build/xtarget/{} && bash ../../../../misc/testsuite/upx_testsuite_1.sh' ::: $jobs
           ls -ld ./build/*/*/*/tmp-upx-testsuite* || true

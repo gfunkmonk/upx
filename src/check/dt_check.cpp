@@ -1343,6 +1343,12 @@ void upx_compiler_sanity_check() noexcept {
 // some doctest test cases
 **************************************************************************/
 
+TEST_CASE("upx_is_constant_evaluated") {
+#if defined(upx_is_constant_evaluated)
+    CHECK(true);
+#endif
+}
+
 TEST_CASE("assert_noexcept") {
     // just to make sure that our own assert() macros do not trigger any compiler warnings
     byte dummy = 0;

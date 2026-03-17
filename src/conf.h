@@ -62,6 +62,7 @@ static_assert(CHAR_BIT == 8);
 static_assert(sizeof(short) == 2);
 static_assert(sizeof(int) == 4);
 static_assert(sizeof(long long) == 8);
+
 // check sane compiler mandatory flags
 static_assert(-1 == ~0);      // two's complement - see https://wg21.link/P0907R4
 static_assert(0u - 1 == ~0u); // two's complement - see https://wg21.link/P0907R4
@@ -78,6 +79,7 @@ static_assert((char) (-1) == 255);             // -funsigned-char
 #if (ACC_CC_GNUC && ACC_CC_GNUC < 0x090000)
 #pragma GCC diagnostic ignored "-Wattributes"
 #endif
+
 // enable some more strict warnings for Git developer builds
 #if defined(UPX_CONFIG_DISABLE_WSTRICT) && (UPX_CONFIG_DISABLE_WSTRICT + 0 == 0)
 #if defined(UPX_CONFIG_DISABLE_WERROR) && (UPX_CONFIG_DISABLE_WERROR + 0 == 0)
@@ -214,7 +216,10 @@ typedef long long upx_off_t;
 #define off_t upx_off_t
 #endif
 
+//
 // shortcuts
+//
+
 #define forceinline __acc_forceinline
 #if (ACC_CC_MSC)
 #define noinline __declspec(noinline)
@@ -489,7 +494,10 @@ noreturn void throwAssertFailed(const char *expr, const char *file, int line, co
 #define assert_noexcept assert
 #endif
 
+//
 // C++ support library
+//
+
 #include "util/cxxlib.h"
 using upx::tribool;
 #define usizeof(expr)      (upx::UnsignedSizeOf<sizeof(expr)>::value)

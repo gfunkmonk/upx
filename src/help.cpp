@@ -172,6 +172,7 @@ struct PackerNames final {
                 e.filters[e.filters_count++] = *f;
             }
         }
+        assert_noexcept(e.methods_count >= 1);
         upx_gnomesort(e.methods, e.methods_count, sizeof(e.methods[0]), ne32_compare);
         upx_gnomesort(e.filters, e.filters_count, sizeof(e.filters[0]), ne32_compare);
     }

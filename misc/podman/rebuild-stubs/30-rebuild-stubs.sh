@@ -36,7 +36,8 @@ make -C doc clean all
 cd /home/upx/src/upx/src/stub
 make maintainer-clean extra-maintainer-clean
 ls -ld ./*.h || true
-rm -f ./*.h
+rm -rf ./*.h
+rm -rf ./*.[!em]*
 ls -la
 git status . || true # make sure the stub files got deleted
 make extra-all all

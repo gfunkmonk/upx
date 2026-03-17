@@ -124,7 +124,7 @@ jobs:
           (cd tmp/artifact && tar --sort=name --zstd -cf "$N.tar.zst" "$N" && rm -rf "./$N" && ls -la && zstd -tq "$N.tar.zst")
           echo "artifact_name=$N" >> $GITHUB_ENV
       - name: ${{ format('Upload artifact {0}', env.artifact_name) }}
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with: { name: '${{ env.artifact_name }}', path: tmp/artifact }
       - name: Run install tests
         run: |
@@ -236,7 +236,7 @@ jobs:
           (cd tmp/artifact && tar --sort=name --zstd -cf "$N.tar.zst" "$N" && rm -rf "./$N" && ls -la && zstd -tq "$N.tar.zst")
           echo "artifact_name=$N" >> $GITHUB_ENV
       - name: ${{ format('Upload artifact {0}', env.artifact_name) }}
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with: { name: '${{ env.artifact_name }}', path: tmp/artifact }
       - name: Run install tests
         run: |
@@ -380,13 +380,15 @@ jobs:
           for d in $dirs; do DESTDIR="$PWD/tmp/artifact/$N/InstallWithCMake/InstallWithDestdirAndStrip/$d" cmake --install build/extra/$d --strip; done
           for d in $dirs; do cmake --install build/extra/$d --prefix "$PWD/tmp/artifact/$N/InstallWithCMake/InstallWithPrefix/$d"; done
           for d in $dirs; do cmake --install build/extra/$d --prefix "$PWD/tmp/artifact/$N/InstallWithCMake/InstallWithPrefixAndStrip/$d" --strip; done
-          (cd build && rsync -R -a */*/*/upx "../tmp/artifact/$N/")
+          (cd build && rsync -v -R -a */*/*/upx "../tmp/artifact/$N/")
+          #(cd build && rsync -v -R -a $(find . -type f -name 'dt_cxxlib.*') "../tmp/artifact/$N/")
+          (cd build; find . -type f -name 'dt_cxxlib.*' -print0 | rsync -v -R -a --from0 --files-from=- . "../tmp/artifact/$N/")
           hardlink="$HOMEBREW_PREFIX/opt/util-linux/bin/hardlink"
           if test -f "$hardlink"; then (cd "tmp/artifact/$N" && "$hardlink" .) fi
           (cd tmp/artifact && gtar --sort=name --zstd -cf "$N.tar.zst" "$N" && rm -rf "./$N" && ls -la && zstd -tq "$N.tar.zst")
           echo "artifact_name=$N" >> $GITHUB_ENV
       - name: ${{ format('Upload artifact {0}', env.artifact_name) }}
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with: { name: '${{ env.artifact_name }}', path: tmp/artifact }
       - name: Run install tests
         run: |
@@ -437,10 +439,10 @@ jobs:
           - { name: windows-11-arm64,   os: windows-11-arm, vsversion: 2022, vsarch: arm64 }
           - { name: windows-11-arm64ec, os: windows-11-arm, vsversion: 2022, vsarch: arm64, use_arm64ec: true }
           # { name: windows-11-arm64x,  os: windows-11-arm, vsversion: 2022, vsarch: arm64, use_arm64x: true }
-          - { name: windows-2022-amd64, os: windows-2022,   vsversion: 2022, vsarch: amd64 }
-          - { name: windows-2022-i386,  os: windows-2022,   vsversion: 2022, vsarch: amd64_x86 }
           - { name: windows-2025-amd64, os: windows-2025,   vsversion: 2022, vsarch: amd64 }
           - { name: windows-2025-i386,  os: windows-2025,   vsversion: 2022, vsarch: amd64_x86 }
+          - { name: windows-2026-amd64, os: windows-2025-vs2026, vsversion: 2026, vsarch: amd64 }
+          - { name: windows-2026-i386,  os: windows-2025-vs2026, vsversion: 2026, vsarch: amd64_x86 }
     name: ${{ format('{0}', matrix.name) }}
     runs-on: ${{ matrix.os }}
     steps:
@@ -449,8 +451,8 @@ jobs:
         with: { submodules: true }
       - name: Check out test suite
         run: git clone --depth=1 https://github.com/upx/upx-testsuite ../deps/upx-testsuite
-      - uses: ilammy/msvc-dev-cmd@v1
-        with: { vsversion: '${{ matrix.vsversion }}', arch: '${{ matrix.vsarch }}' }
+      # uses: ilammy/msvc-dev-cmd@v1
+      # with: { vsversion: '${{ matrix.vsversion }}', arch: '${{ matrix.vsarch }}' }
       - name: Set platform
         run: |
           if [[ "${{ matrix.use_arm64ec }}" == "true" ]]; then true;
@@ -491,7 +493,7 @@ jobs:
           (cd tmp/artifact && tar --sort=name --gzip -cf "$N.tar.gz" "$N" && rm -rf "./$N" && ls -la && gzip -tq "$N.tar.gz")
           echo "artifact_name=$N" >> $GITHUB_ENV
       - name: ${{ format('Upload artifact {0}', env.artifact_name) }}
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with: { name: '${{ env.artifact_name }}', path: tmp/artifact }
       - name: Run ctest tests
         run: |
@@ -518,6 +520,11 @@ jobs:
           - { name: arm64ec-win64-vs2025, os: windows-2025, vsversion: 2022, vsarch: amd64_arm64, cl_machine_flags: -arm64EC, link_machine_flags: '/machine:arm64ec' }
           # { name: arm64x-win64-vs2025,  os: windows-2025, vsversion: 2022, vsarch: amd64_arm64, cl_machine_flags: -arm64EC, link_machine_flags: '/machine:arm64x' }
           - { name: i386-win32-vs2025,    os: windows-2025, vsversion: 2022, vsarch: amd64_x86 }
+          # { name: amd64-win64-vs2026,   os: windows-2025-vs2026, vsversion: 2026, vsarch: amd64 }
+          # { name: arm64-win64-vs2026,   os: windows-2025-vs2026, vsversion: 2026, vsarch: amd64_arm64 }
+          # { name: arm64ec-win64-vs2026, os: windows-2025-vs2026, vsversion: 2026, vsarch: amd64_arm64, cl_machine_flags: -arm64EC, link_machine_flags: '/machine:arm64ec' }
+          # { name: arm64x-win64-vs2026,  os: windows-2025-vs2026, vsversion: 2026, vsarch: amd64_arm64, cl_machine_flags: -arm64EC, link_machine_flags: '/machine:arm64x' }
+          # { name: i386-win32-vs2026,    os: windows-2025-vs2026, vsversion: 2026, vsarch: amd64_x86 }
     name: ${{ format('windows-bh {0}', matrix.name) }}
     runs-on: ${{ matrix.os }}
     env:
@@ -586,7 +593,7 @@ jobs:
           (cd tmp/artifact && tar --sort=name --gzip -cf "$N.tar.gz" "$N" && rm -rf "./$N" && ls -la && gzip -tq "$N.tar.gz")
           echo "artifact_name=$N" >> $GITHUB_ENV
       - name: ${{ format('Upload artifact {0}', env.artifact_name) }}
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with: { name: '${{ env.artifact_name }}', path: tmp/artifact }
       - name: Mimic ctest tests
         if: ${{ matrix.vsarch != 'amd64_arm64' }}
@@ -764,7 +771,7 @@ jobs:
           (cd tmp/artifact && tar --sort=name --zstd -cf "$N.tar.zst" "$N" && rm -rf "./$N" && ls -la && zstd -tq "$N.tar.zst")
           echo "artifact_name=$N" >> $GITHUB_ENV
       - name: ${{ format('Upload artifact {0}', env.artifact_name) }}
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with: { name: '${{ env.artifact_name }}', path: tmp/artifact }
       - name: Run install tests
         if: ${{ contains(matrix.zig_target, '-linux') }}
