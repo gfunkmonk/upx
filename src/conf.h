@@ -620,6 +620,7 @@ using upx::tribool;
 #define M_DEFLATE     15 // NOT YET USED
 #define M_ZSTD        16
 #define M_BZIP2       17 // NOT YET USED
+#define M_LZIP        18
 // compression methods internal usage
 #define M_ALL         (-1)
 #define M_END         (-2)
@@ -635,6 +636,7 @@ using upx::tribool;
 #define M_IS_DEFLATE(x) ((x) == M_DEFLATE)
 #define M_IS_ZSTD(x)    ((x) == M_ZSTD)
 #define M_IS_BZIP2(x)   ((x) == M_BZIP2)
+#define M_IS_LZIP(x)    ((x) == M_LZIP)
 
 // filters internal usage
 #define FT_END         (-1)
@@ -721,12 +723,19 @@ struct zstd_compress_config_t final {
     void reset() noexcept;
 };
 
+struct lzip_compress_config_t final {
+    unsigned dummy;
+
+    void reset() noexcept;
+};
+
 struct upx_compress_config_t final {
     bzip2_compress_config_t conf_bzip2;
     lzma_compress_config_t conf_lzma;
     ucl_compress_config_t conf_ucl;
     zlib_compress_config_t conf_zlib;
     zstd_compress_config_t conf_zstd;
+    lzip_compress_config_t conf_lzip;
 
     void reset() noexcept {
         conf_bzip2.reset();
@@ -734,6 +743,7 @@ struct upx_compress_config_t final {
         conf_ucl.reset();
         conf_zlib.reset();
         conf_zstd.reset();
+        conf_lzip.reset();
     }
 };
 
@@ -780,6 +790,12 @@ struct zstd_compress_result_t final {
     void reset() noexcept { mem_clear(this); }
 };
 
+struct lzip_compress_result_t final {
+    unsigned dummy;
+
+    void reset() noexcept { mem_clear(this); }
+};
+
 struct upx_compress_result_t final {
     // debugging aid
     struct Debug {
@@ -794,6 +810,7 @@ struct upx_compress_result_t final {
     ucl_compress_result_t result_ucl;
     zlib_compress_result_t result_zlib;
     zstd_compress_result_t result_zstd;
+    lzip_compress_result_t result_lzip;
 
     void reset() noexcept {
         debug.reset();
@@ -802,6 +819,7 @@ struct upx_compress_result_t final {
         result_ucl.reset();
         result_zlib.reset();
         result_zstd.reset();
+        result_lzip.reset();
     }
 };
 

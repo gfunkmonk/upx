@@ -115,6 +115,10 @@ int upx_compress(const upx_bytep src, unsigned src_len, upx_bytep dst, unsigned 
     else if (M_IS_ZSTD(method))
         r = upx_zstd_compress(src, src_len, dst, dst_len, cb, method, level, cconf, cresult);
 #endif
+#if (WITH_LZIP)
+    else if (M_IS_LZIP(method))
+        r = upx_lzip_compress(src, src_len, dst, dst_len, cb, method, level, cconf, cresult);
+#endif
     else {
         throwInternalError("unknown compression method %d", method);
     }
@@ -168,6 +172,10 @@ int upx_decompress(const upx_bytep src, unsigned src_len, upx_bytep dst, unsigne
     else if (M_IS_ZSTD(method))
         r = upx_zstd_decompress(src, src_len, dst, dst_len, method, cresult);
 #endif
+#if (WITH_LZIP)
+    else if (M_IS_LZIP(method))
+        r = upx_lzip_decompress(src, src_len, dst, dst_len, method, cresult);
+#endif
     else {
         throwInternalError("unknown compression method %d", method);
     }
@@ -214,6 +222,10 @@ int upx_test_overlap(const upx_bytep buf, const upx_bytep tbuf, unsigned src_off
 #if (WITH_ZSTD)
     else if (M_IS_ZSTD(method))
         r = upx_zstd_test_overlap(buf, tbuf, src_off, src_len, dst_len, method, cresult);
+#endif
+#if (WITH_LZIP)
+    else if (M_IS_LZIP(method))
+        r = upx_lzip_test_overlap(buf, tbuf, src_off, src_len, dst_len, method, cresult);
 #endif
     else {
         throwInternalError("unknown compression method %d", method);

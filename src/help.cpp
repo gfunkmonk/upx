@@ -290,6 +290,9 @@ void show_help(int verbose) {
 #if WITH_BZIP2
                     "  --bzip2             try bzip2 [an older algorithm]\n"
 #endif
+#if WITH_LZIP
+                    "  --lzip              try lzip [LZMA-based lzip format]\n"
+#endif
                     "  --brute             try all available compression methods & filters [slow]\n"
                     "  --ultra-brute       try even more compression variants [very slow]\n"
                     "\n");
@@ -503,6 +506,11 @@ void show_version(bool one_line) {
     v = upx_bzip2_version_string();
     if (v != nullptr && v[0])
         fprintf(f, "bzip2 data compression library %s\n", v);
+#endif
+#if (WITH_LZIP)
+    v = upx_lzip_version_string();
+    if (v != nullptr && v[0])
+        fprintf(f, "lzlib data compression library %s\n", v);
 #endif
 #if !defined(DOCTEST_CONFIG_DISABLE)
     fprintf(f, "doctest C++ testing framework version %s\n", DOCTEST_VERSION_STR);

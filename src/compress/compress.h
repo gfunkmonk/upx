@@ -162,4 +162,25 @@ int upx_zstd_test_overlap  ( const upx_bytep buf,
                              const upx_compress_result_t *cresult );
 #endif
 
+#if (WITH_LZIP)
+int upx_lzip_init(void);
+const char *upx_lzip_version_string(void);
+int upx_lzip_compress      ( const upx_bytep src, unsigned  src_len,
+                                   upx_bytep dst, unsigned *dst_len,
+                                   upx_callback_t *cb,
+                                   int method, int level,
+                             const upx_compress_config_t *cconf,
+                                   upx_compress_result_t *cresult );
+int upx_lzip_decompress    ( const upx_bytep src, unsigned  src_len,
+                                   upx_bytep dst, unsigned *dst_len,
+                                   int method,
+                             const upx_compress_result_t *cresult );
+int upx_lzip_test_overlap  ( const upx_bytep buf,
+                             const upx_bytep tbuf,
+                                   unsigned  src_off, unsigned src_len,
+                                   unsigned *dst_len,
+                                   int method,
+                             const upx_compress_result_t *cresult );
+#endif
+
 /* vim:set ts=4 sw=4 et: */

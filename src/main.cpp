@@ -477,6 +477,13 @@ static int do_option(int optc, const char *arg) {
             e_method(M_BZIP2, opt->level);
         break;
 #endif
+#if WITH_LZIP
+    case 730:
+        opt->method_lzip_seen = true;
+        if (!set_method(M_LZIP, -1))
+            e_method(M_LZIP, opt->level);
+        break;
+#endif
 
     // compression level
     case '1':
@@ -914,6 +921,7 @@ int main_get_options(int argc, char **argv) {
         {"prefer-ucl", 0x10, N, 724},
         {"zstd", 0x10, N, 725},    // --zstd
         {"bzip2", 0x10, N, 729},    // --bzip2
+        {"lzip", 0x10, N, 730},    // --lzip
         {"all-filters", 0x10, N, 523},
         {"all-methods", 0x10, N, 524},
         {"exact", 0x10, N, 525},  // user requires byte-identical decompression
@@ -1095,6 +1103,7 @@ void main_get_envoptions() {
         {"prefer-ucl", 0x10, N, 724},
         {"zstd", 0x10, N, 725},    // --zstd
         {"bzip2", 0x10, N, 726},    // --bzip2
+        {"lzip", 0x10, N, 730},    // --lzip
 
         // win32/pe
         {"compress-exports", 2, N, 630},
@@ -1276,6 +1285,9 @@ int upx_main(int argc, char *argv[]) may_throw {
 #endif
 #if (WITH_ZSTD)
     assert(upx_zstd_init() == 0);
+#endif
+#if (WITH_LZIP)
+    assert(upx_lzip_init() == 0);
 #endif
 
     /* get options */

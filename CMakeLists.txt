@@ -267,6 +267,7 @@ endif()
 set(UPX_CONFIG_DISABLE_THREADS OFF) # multithreading is currently not used; maybe in UPX version 6
 set(UPX_CONFIG_DISABLE_BZIP2 OFF)   # bzip2 is currently not used; we might need it to decompress linux kernels
 set(UPX_CONFIG_DISABLE_ZSTD OFF)   # zstd is supported
+set(UPX_CONFIG_DISABLE_LZIP OFF)   # lzip is supported via system lzlib
 
 upx_cmake_include_hook(4_targets)
 
@@ -325,6 +326,18 @@ if(NOT UPX_CONFIG_DISABLE_C_STANDARD)
 endif()
 endif() # UPX_CONFIG_DISABLE_ZSTD
 
+if(NOT UPX_CONFIG_DISABLE_LZIP)
+find_path(LZLIB_INCLUDE_DIR NAMES lzlib.h)
+find_library(LZLIB_LIBRARY NAMES lz)
+if(LZLIB_INCLUDE_DIR AND LZLIB_LIBRARY)
+    set(LZLIB_FOUND TRUE)
+else()
+    set(LZLIB_FOUND FALSE)
+    set(UPX_CONFIG_DISABLE_LZIP ON)
+    message(STATUS "lzlib not found; disabling lzip support")
+endif()
+endif() # UPX_CONFIG_DISABLE_LZIP
+
 upx_add_glob_files(upx_SOURCES "src/*.cpp" "src/[cfu]*/*.cpp")
 add_executable(upx ${upx_SOURCES})
 if(NOT UPX_CONFIG_DISABLE_CXX_STANDARD)
@@ -336,6 +349,10 @@ if(NOT UPX_CONFIG_DISABLE_BZIP2)
 endif()
 if(NOT UPX_CONFIG_DISABLE_ZSTD)
     target_link_libraries(upx upx_vendor_zstd)
+endif()
+if(NOT UPX_CONFIG_DISABLE_LZIP)
+    target_link_libraries(upx ${LZLIB_LIBRARY})
+    target_include_directories(upx PRIVATE ${LZLIB_INCLUDE_DIR})
 endif()
 if(Threads_FOUND)
     target_link_libraries(upx Threads::Threads)
@@ -422,6 +439,9 @@ if(NOT UPX_CONFIG_DISABLE_BZIP2)
 endif()
 if(NOT UPX_CONFIG_DISABLE_ZSTD)
     target_compile_definitions(${t} PRIVATE WITH_ZSTD=1)
+endif()
+if(NOT UPX_CONFIG_DISABLE_LZIP)
+    target_compile_definitions(${t} PRIVATE WITH_LZIP=1)
 endif()
 if(HAVE_UTIMENSAT)
     target_compile_definitions(${t} PRIVATE USE_UTIMENSAT=1)
