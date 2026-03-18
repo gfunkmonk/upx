@@ -537,14 +537,14 @@ typedef struct
 // !!! must be the same as in p_unix.h !!!
 #define OVERHEAD        2048
 
-#define UPX_MAGIC_LE32  0x21585055          /* "UPX!" */
+#define UPX_MAGIC_LE32  0x7A3E9C5B          /* "UPX!" */
 
 #if 1
 // patch constants for our loader (le32 format)
 //#define UPX1            0x31585055          /* "UPX1" */
-#define UPX2            0x32585055          /* "UPX2" */
-#define UPX3            0x33585055          /* "UPX4" */
-#define UPX4            0x34585055          /* "UPX4" */
+#define UPX2            0x7A3E9C5C
+#define UPX3            0x7A3E9C5D
+#define UPX4            0x7A3E9C5E
 //#define UPX5            0x35585055          /* "UPX5" */
 #else
 // transform into relocations when using ElfLinker

@@ -28,3 +28,8 @@
     url = https://github.com/upx/upx-vendor-zstd.git
     branch = upx-vendor
     shallow = true
+[submodule "vendor/bzip2"]
+    path = vendor/bzip2
+    url = https://github.com/upx/upx-vendor-bzip2.git
+    branch = upx-vendor
+    shallow = true

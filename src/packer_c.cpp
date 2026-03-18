@@ -34,7 +34,7 @@
 **************************************************************************/
 
 /*static*/ bool Packer::isValidCompressionMethod(int m) {
-    return M_IS_LZMA(m) || M_IS_NRV2B(m) || M_IS_NRV2D(m) || M_IS_NRV2E(m) || M_IS_ZSTD(m);
+    return M_IS_LZMA(m) || M_IS_NRV2B(m) || M_IS_NRV2D(m) || M_IS_NRV2E(m) || M_IS_ZSTD(m) || M_IS_BZIP2(m);
 }
 
 const int *Packer::getDefaultCompressionMethods_8(int method, int level, int small) const {
@@ -49,6 +49,9 @@ const int *Packer::getDefaultCompressionMethods_8(int method, int level, int sma
     static const int m_nrv2e[] = {M_NRV2E_8, M_END};
 #if WITH_ZSTD
     static const int m_zstd[] = {M_ZSTD, M_END};
+#endif
+#if WITH_BZIP2
+    static const int m_bzip2[] = {M_BZIP2, M_END};
 #endif
 
     if (method == M_ALL)
@@ -65,6 +68,10 @@ const int *Packer::getDefaultCompressionMethods_8(int method, int level, int sma
 #if WITH_ZSTD
     if (M_IS_ZSTD(method))
         return m_zstd;
+#endif
+#if WITH_BZIP2
+    if (M_IS_BZIP2(method))
+        return m_bzip2;
 #endif
     if (small < 0)
         small = file_size <= 512 * 1024;
@@ -84,6 +91,9 @@ const int *Packer::getDefaultCompressionMethods_le32(int method, int level, int 
 #if WITH_ZSTD
     static const int m_zstd[] = {M_ZSTD, M_END};
 #endif
+#if WITH_BZIP2
+    static const int m_bzip2[] = {M_BZIP2, M_END};
+#endif
 
     if (method == M_ALL)
         return m_all;
@@ -99,6 +109,10 @@ const int *Packer::getDefaultCompressionMethods_le32(int method, int level, int 
 #if WITH_ZSTD
     if (M_IS_ZSTD(method))
         return m_zstd;
+#endif
+#if WITH_BZIP2
+    if (M_IS_BZIP2(method))
+        return m_bzip2;
 #endif
     if (small < 0)
         small = file_size <= 512 * 1024;

@@ -470,6 +470,13 @@ static int do_option(int optc, const char *arg) {
             e_method(M_ZSTD, opt->level);
         break;
 #endif
+#if WITH_BZIP2
+    case 729:
+        opt->method_zstd_seen = true;
+        if (!set_method(M_BZIP2, -1))
+            e_method(M_BZIP2, opt->level);
+        break;
+#endif
 
     // compression level
     case '1':
@@ -906,6 +913,7 @@ int main_get_options(int argc, char **argv) {
         {"prefer-nrv", 0x10, N, 723},
         {"prefer-ucl", 0x10, N, 724},
         {"zstd", 0x10, N, 725},    // --zstd
+        {"bzip2", 0x10, N, 729},    // --bzip2
         {"all-filters", 0x10, N, 523},
         {"all-methods", 0x10, N, 524},
         {"exact", 0x10, N, 525},  // user requires byte-identical decompression
@@ -1086,6 +1094,7 @@ void main_get_envoptions() {
         {"prefer-nrv", 0x10, N, 723},
         {"prefer-ucl", 0x10, N, 724},
         {"zstd", 0x10, N, 725},    // --zstd
+        {"bzip2", 0x10, N, 726},    // --bzip2
 
         // win32/pe
         {"compress-exports", 2, N, 630},
