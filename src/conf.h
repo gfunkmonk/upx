@@ -619,7 +619,7 @@ using upx::tribool;
 #define M_LZMA        14
 #define M_DEFLATE     15 // NOT YET USED
 #define M_ZSTD        16
-#define M_BZIP2       17 // NOT YET USED
+#define M_BZIP2       17
 #define M_LZIP        18
 // compression methods internal usage
 #define M_ALL         (-1)
