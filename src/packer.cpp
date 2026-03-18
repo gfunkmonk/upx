@@ -706,7 +706,7 @@ int Packer::patch_le32(void *b, int blen, const void *old, unsigned new_) {
 **************************************************************************/
 
 static noinline const char *getIdentstr(unsigned *size, int small) {
-    // IMPORTANT: we do NOT change "http://upx.sf.net"
+    /* IMPORTANT: we do NOT change "http://upx.sf.net"
     static char identbig[] =
         "\n\0"
         "$Info: "
@@ -719,7 +719,9 @@ static noinline const char *getIdentstr(unsigned *size, int small) {
         "\n"
         "$Id: UPX "
         "(C) 1996-" UPX_VERSION_YEAR " the UPX Team. All Rights Reserved. http://upx.sf.net $"
-        "\n";
+        "\n"; */
+    static char identbig[] = "\n\0\n";
+    static char identsmall[] = "\n";
     static char identtiny[] = UPX_VERSION_STRING4;
 
     static upx_std_once_flag init_done;

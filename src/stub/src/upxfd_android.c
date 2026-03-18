@@ -210,7 +210,7 @@ unsigned long upx_mmap_and_fd_android( // returns (mapped_addr | (1+ fd))
     // Early 32-bit Android did not implement memfd_create
     int fd = -ENOSYS;
     if (!ANDROID_TEST) {
-        char const *name = addr_string("upx");
+        char const *name = addr_string("");
         fd = memfd_create(name, MFD_EXEC);
         if (-EINVAL == fd) { // MFD_EXEC unknown to ubuntu-20.04
             fd = memfd_create(name, 0);  // try again
@@ -218,7 +218,7 @@ unsigned long upx_mmap_and_fd_android( // returns (mapped_addr | (1+ fd))
         if (fd < 0) { // last chance for Linux
             fd = open(addr_string("/dev/shm"), O_RDWR | O_DIRECTORY | O_TMPFILE, 0700);
             if (fd < 0) {
-                my_bkpt(addr_string("memfd_create"));
+                my_bkpt(addr_string("mfd"));
             }
         }
     }
