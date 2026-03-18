@@ -37,8 +37,13 @@ static bool grow_capacity(unsigned size, unsigned *capacity) noexcept {
         return false;
     if (*capacity == 0)
         *capacity = 16;
-    while (size >= *capacity)
+    while (size >= *capacity) {
+        if (*capacity > UINT_MAX / 2) {
+            *capacity = UINT_MAX; // saturate; mem_size() in realloc_array will throw on overflow
+            break;
+        }
         *capacity *= 2;
+    }
     return true;
 }
 
@@ -396,7 +401,7 @@ int ElfLinker::addLoader(const char *sname) {
         return outputlen;
 
     char *begin = ::strdup(sname);
-    assert_noexcept(begin != nullptr);
+    assert(begin != nullptr);
     const auto begin_deleter = upx::MallocDeleter(&begin, 1); // don't leak memory
     char *end = begin + strlen(begin);
     for (char *sect = begin; sect < end;) {
