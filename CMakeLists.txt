@@ -17,6 +17,13 @@
 #   - install
 #   - print summary
 
+find_program(CCACHE_PROGRAM ccache)
+if(CCACHE_PROGRAM)
+  message(STATUS "Setting up ccache ...")
+  set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
+  set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
+endif()
+
 # CMake version check; using a somewhat current CMake version is highly recommended
 file(REMOVE "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/.upx_cmake_config_done.txt")
 if(DEFINED UPX_CONFIG_CMAKE_MINIMUM_REQUIRED_VERSION)
