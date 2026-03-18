@@ -97,13 +97,11 @@ unsigned UiPacker::update_fu_len = 0;
 // constants
 **************************************************************************/
 
-static const char header_line1[] = "        File size         Ratio      Format      Name\n";
+static const char header_line1[] = "\033[33m        File size         Ratio      Format      Name\033[0m\n";
 #ifdef __MSDOS__
-static const char header_line2[] = "   ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ   ÄÄÄÄÄÄ   ÄÄÄÄÄÄÄÄÄÄÄ   ÄÄÄÄÄÄÄÄÄÄÄ\n";
+static const char header_line2[] = "\033[2;36m   ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ   ÄÄÄÄÄÄ   ÄÄÄÄÄÄÄÄÄÄÄ   ÄÄÄÄÄÄÄÄÄÄÄ\033[0m\n";
 #else
-//static const char header_line2[] = "   --------------------   ------   -----------   -----------\n";
-//static const char header_line2[] = "   ╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍   ╍╍╍╍╍╍   ╍╍╍╍╍╍╍╍╍╍╍   ╍╍╍╍╍╍╍╍╍╍╍\n";
-static const char header_line2[] = "   ════════════════════   ══════   ═══════════   ═══════════\n";
+static const char header_line2[] = "\033[2;36m   ════════════════════   ══════   ═══════════   ═══════════\033[0m\n";
 #endif
 
 static const char progress_bar_empty[] = "\xe2\x88\x99"; // ∙ (U+2219 BULLET OPERATOR)
