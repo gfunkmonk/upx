@@ -436,7 +436,7 @@ int ElfLinker::addLoader(const char *sname) {
             assert((section->size + outputlen) <= output_capacity);
             memcpy(output + outputlen, section->input, section->size);
             section->output = output + outputlen; // FIXME: INVALIDATED by realloc()
-            fprintf(stderr, "section added: 0x%04x %3d %s (align=%d)\n", outputlen, section->size, section->name, section->p2align);
+            //fprintf(stderr, "section added: 0x%04x %3d %s (align=%d)\n", outputlen, section->size, section->name, section->p2align);
             NO_printf("section added: 0x%04x %3d %s\n", outputlen, section->size, section->name);
             outputlen += section->size;
 
