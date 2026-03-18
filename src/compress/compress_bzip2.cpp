@@ -36,13 +36,11 @@ void bzip2_compress_config_t::reset() noexcept { mem_clear(this); }
 #include "compress.h"
 #include "../util/membuffer.h"
 
-#if defined(BZ_NO_STDIO) || 1
-// we need to supply bz_internal_error() when building with BZ_NO_STDIO
+// we need to supply bz_internal_error() because vendor/bzip2 is built with BZ_NO_STDIO
 extern "C" {
 extern void bz_internal_error(int);
 void bz_internal_error(int errcode) { throwInternalError("bz_internal_error %d", errcode); }
 }
-#endif // BZ_NO_STDIO
 
 static int convert_errno_from_bzip2(int r) {
     switch (r) {
@@ -50,7 +48,12 @@ static int convert_errno_from_bzip2(int r) {
         return UPX_E_OK;
     case BZ_MEM_ERROR:
         return UPX_E_OUT_OF_MEMORY;
-    // TODO later: convert to UPX_E_INPUT_OVERRUN, UPX_E_OUTPUT_OVERRUN
+    case BZ_DATA_ERROR:
+    case BZ_DATA_ERROR_MAGIC:
+    case BZ_UNEXPECTED_EOF:
+        return UPX_E_INPUT_OVERRUN;
+    case BZ_OUTBUFF_FULL:
+        return UPX_E_OUTPUT_OVERRUN;
     default:
         break;
     }
@@ -187,23 +190,24 @@ TEST_CASE("compress_bzip2") { CHECK(check_bzip2(M_BZIP2, 9, 46)); }
 #endif // DEBUG
 
 TEST_CASE("upx_bzip2_decompress") {
-#if 0  // TODO later, see above
     const byte *c_data;
-    byte d_buf[32];
+    byte d_buf[16];
     unsigned d_len;
     int r;
 
-    c_data = (const byte *) "\x28\xb5\x2f\xfd\x20\x20\x3d\x00\x00\x08\xff\x01\x00\x34\x4e\x08";
-    d_len = 32;
-    r = upx_bzip2_decompress(c_data, 16, d_buf, &d_len, M_BZIP2, nullptr);
-    CHECK((r == 0 && d_len == 32));
-    r = upx_bzip2_decompress(c_data, 15, d_buf, &d_len, M_BZIP2, nullptr);
+    // 16 zero bytes compressed with bzip2
+    c_data = (const byte *) "\x42\x5a\x68\x39\x31\x41\x59\x26\x53\x59\xaa\xd2\xdd\x37\x00\x00"
+                            "\x00\x40\x00\x40\x04\x20\x00\x21\x00\x82\x83\x17\x72\x45\x38\x50"
+                            "\x90\xaa\xd2\xdd\x37";
+    d_len = 16;
+    r = upx_bzip2_decompress(c_data, 37, d_buf, &d_len, M_BZIP2, nullptr);
+    CHECK((r == 0 && d_len == 16));
+    r = upx_bzip2_decompress(c_data, 36, d_buf, &d_len, M_BZIP2, nullptr);
     CHECK(r == UPX_E_INPUT_OVERRUN);
-    d_len = 31;
-    r = upx_bzip2_decompress(c_data, 16, d_buf, &d_len, M_BZIP2, nullptr);
+    d_len = 15;
+    r = upx_bzip2_decompress(c_data, 37, d_buf, &d_len, M_BZIP2, nullptr);
     CHECK(r == UPX_E_OUTPUT_OVERRUN);
     UNUSED(r);
-#endif // TODO
 }
 
 #endif // WITH_BZIP2
