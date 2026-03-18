@@ -117,16 +117,16 @@ int upx_bzip2_decompress(const upx_bytep src, unsigned src_len, upx_bytep dst, u
     int r = UPX_E_ERROR;
     uint64_t produced = 0;
     bool overflow = false;
-    char dummy[1];
+    char overflow_buffer[1];
     while (true) {
         if (s.avail_out == 0) {
-            s.next_out = dummy;
-            s.avail_out = sizeof(dummy);
+            s.next_out = overflow_buffer;
+            s.avail_out = sizeof(overflow_buffer);
         }
         const uint64_t produced_before = produced;
         bz = BZ2_bzDecompress(&s);
         produced = (uint64_t(s.total_out_hi32) << 32) | s.total_out_lo32;
-        if (s.next_out == dummy && produced > produced_before)
+        if (s.next_out == overflow_buffer && produced > produced_before)
             overflow = true;
         if (produced > UINT_MAX)
             overflow = true;
@@ -146,6 +146,7 @@ int upx_bzip2_decompress(const upx_bytep src, unsigned src_len, upx_bytep dst, u
         }
     }
 
+    // Clamp to the representable range even when overflow has been reported.
     *dst_len = produced > UINT_MAX ? UINT_MAX : (unsigned) produced;
     BZ2_bzDecompressEnd(&s);
     return r;
