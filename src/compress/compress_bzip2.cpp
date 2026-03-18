@@ -115,6 +115,7 @@ int upx_bzip2_decompress(const upx_bytep src, unsigned src_len, upx_bytep dst, u
         return convert_errno_from_bzip2(bz);
 
     int r = UPX_E_ERROR;
+    uint64_t produced = 0;
     bool overflow = false;
     char dummy[1];
     while (true) {
@@ -123,7 +124,7 @@ int upx_bzip2_decompress(const upx_bytep src, unsigned src_len, upx_bytep dst, u
             s.avail_out = sizeof(dummy);
         }
         bz = BZ2_bzDecompress(&s);
-        const uint64_t produced = (uint64_t(s.total_out_hi32) << 32) | s.total_out_lo32;
+        produced = (uint64_t(s.total_out_hi32) << 32) | s.total_out_lo32;
         if (produced > *dst_len)
             overflow = true;
         if (bz == BZ_STREAM_END) {
@@ -140,7 +141,7 @@ int upx_bzip2_decompress(const upx_bytep src, unsigned src_len, upx_bytep dst, u
         }
     }
 
-    *dst_len = s.total_out_lo32;
+    *dst_len = produced > UINT_MAX ? UINT_MAX : (unsigned) produced;
     BZ2_bzDecompressEnd(&s);
     return r;
 }
