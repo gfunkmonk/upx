@@ -56,8 +56,8 @@ struct UiPacker::State final {
     int pass;
     int total_passes;
 
-    // message stuff; extra space needed because the progress bar fill char '•'
-    // is a 3-byte UTF-8 sequence (\xe2\x80\xa2) so the byte count exceeds the
+    // message stuff; extra space needed because the progress bar fill '•' and
+    // empty '∙' chars are 3-byte UTF-8 sequences so the byte count exceeds the
     // display width (bar_len of up to 64 display chars × 3 bytes = 192 bytes)
     char msg_buf[1 + 256 + 1];
     int pos;               // last progress bar position
@@ -104,7 +104,8 @@ static const char header_line2[] = "   ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 
 static const char header_line2[] = "   --------------------   ------   -----------   -----------\n";
 #endif
 
-static const char progress_bar_empty = '.';
+static const char progress_bar_empty[] = "\xe2\x88\x99"; // ∙ (U+2219 BULLET OPERATOR)
+static const int progress_bar_empty_len = (int) (sizeof(progress_bar_empty) - 1);
 static const char progress_bar_full[] = "\xe2\x80\xa2"; // • (U+2022 BULLET)
 static const int progress_bar_full_len = (int) (sizeof(progress_bar_full) - 1);
 static const char progress_bar_left = '[';
@@ -414,7 +415,8 @@ void UiPacker::doCallback(unsigned isize, unsigned osize) {
             memcpy(m, progress_bar_full, progress_bar_full_len);
             m += progress_bar_full_len;
         } else {
-            *m++ = progress_bar_empty;
+            memcpy(m, progress_bar_empty, progress_bar_empty_len);
+            m += progress_bar_empty_len;
         }
     }
     *m++ = progress_bar_right;
