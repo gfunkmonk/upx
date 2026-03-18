@@ -28,10 +28,10 @@ endif()
 file(REMOVE "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/.upx_cmake_config_done.txt")
 if(DEFINED UPX_CONFIG_CMAKE_MINIMUM_REQUIRED_VERSION)
     cmake_minimum_required(VERSION "${UPX_CONFIG_CMAKE_MINIMUM_REQUIRED_VERSION}" FATAL_ERROR)
-elseif(NOT ${CMAKE_VERSION} VERSION_LESS "3.10")
-    cmake_minimum_required(VERSION "3.10" FATAL_ERROR)
+elseif(NOT ${CMAKE_VERSION} VERSION_LESS "3.28")
+    cmake_minimum_required(VERSION "3.28" FATAL_ERROR)
 else()
-    cmake_minimum_required(VERSION "3.8" FATAL_ERROR) # CMake >= 3.8 is needed for CXX_STANDARD 17
+    cmake_minimum_required(VERSION "3.12" FATAL_ERROR) # CMake >= 3.12 is needed for CXX_STANDARD 20
 endif()
 
 # support functions and some utility
@@ -287,7 +287,7 @@ if(Threads_FOUND)
         if(NOT UPX_CONFIG_DISABLE_CXX_STANDARD)
             try_compile(result "${CMAKE_CURRENT_BINARY_DIR}"
                         "${CMAKE_CURRENT_SOURCE_DIR}/misc/cmake/try_compile/${f}"
-                        OUTPUT_VARIABLE output CXX_STANDARD 17)
+                        OUTPUT_VARIABLE output CXX_STANDARD 20)
         else()
             try_compile(result "${CMAKE_CURRENT_BINARY_DIR}"
                         "${CMAKE_CURRENT_SOURCE_DIR}/misc/cmake/try_compile/${f}"
@@ -335,7 +335,7 @@ endif() # UPX_CONFIG_DISABLE_ZSTD
 upx_add_glob_files(upx_SOURCES "src/*.cpp" "src/[cfu]*/*.cpp")
 add_executable(upx ${upx_SOURCES})
 if(NOT UPX_CONFIG_DISABLE_CXX_STANDARD)
-    set_property(TARGET upx PROPERTY CXX_STANDARD 17)
+    set_property(TARGET upx PROPERTY CXX_STANDARD 20)
 endif()
 target_link_libraries(upx upx_vendor_ucl upx_vendor_zlib)
 if(NOT UPX_CONFIG_DISABLE_BZIP2)
