@@ -471,14 +471,14 @@ static int do_option(int optc, const char *arg) {
         break;
 #endif
 #if WITH_BZIP2
-    case 729:
+    case 726:
         opt->method_bzip2_seen = true;
         if (!set_method(M_BZIP2, -1))
             e_method(M_BZIP2, opt->level);
         break;
 #endif
 #if WITH_LZIP
-    case 730:
+    case 727:
         opt->method_lzip_seen = true;
         if (!set_method(M_LZIP, -1))
             e_method(M_LZIP, opt->level);
@@ -920,8 +920,8 @@ int main_get_options(int argc, char **argv) {
         {"prefer-nrv", 0x10, N, 723},
         {"prefer-ucl", 0x10, N, 724},
         {"zstd", 0x10, N, 725},    // --zstd
-        {"bzip2", 0x10, N, 729},    // --bzip2
-        {"lzip", 0x10, N, 730},    // --lzip
+        {"bzip2", 0x10, N, 726},    // --bzip2
+        {"lzip", 0x10, N, 727},    // --lzip
         {"all-filters", 0x10, N, 523},
         {"all-methods", 0x10, N, 524},
         {"exact", 0x10, N, 525},  // user requires byte-identical decompression
@@ -1103,7 +1103,7 @@ void main_get_envoptions() {
         {"prefer-ucl", 0x10, N, 724},
         {"zstd", 0x10, N, 725},    // --zstd
         {"bzip2", 0x10, N, 726},    // --bzip2
-        {"lzip", 0x10, N, 730},    // --lzip
+        {"lzip", 0x10, N, 727},    // --lzip
 
         // win32/pe
         {"compress-exports", 2, N, 630},
