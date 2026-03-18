@@ -102,9 +102,6 @@ int upx_bzip2_decompress(const upx_bytep src, unsigned src_len, upx_bytep dst, u
     UNUSED(method);
     UNUSED(cresult);
     bz_stream s{};
-    s.bzalloc = nullptr;
-    s.bzfree = nullptr;
-    s.opaque = nullptr;
     s.next_in = (char *) const_cast<byte *>(src);
     s.avail_in = src_len;
     s.next_out = (char *) dst;
@@ -117,16 +114,15 @@ int upx_bzip2_decompress(const upx_bytep src, unsigned src_len, upx_bytep dst, u
     int r = UPX_E_ERROR;
     uint64_t produced = 0;
     bool overflow = false;
-    char overflow_buffer[1];
+    char discard_buffer[1];
     while (true) {
         if (s.avail_out == 0) {
-            s.next_out = overflow_buffer;
-            s.avail_out = sizeof(overflow_buffer);
+            s.next_out = discard_buffer;
+            s.avail_out = sizeof(discard_buffer);
         }
-        const uint64_t produced_before = produced;
         bz = BZ2_bzDecompress(&s);
         produced = (uint64_t(s.total_out_hi32) << 32) | s.total_out_lo32;
-        if (s.next_out == overflow_buffer && produced > produced_before)
+        if (s.next_out == discard_buffer && s.avail_out < sizeof(discard_buffer))
             overflow = true;
         if (produced > UINT_MAX)
             overflow = true;
