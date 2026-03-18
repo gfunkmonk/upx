@@ -101,7 +101,9 @@ static const char header_line1[] = "        File size         Ratio      Format 
 #ifdef __MSDOS__
 static const char header_line2[] = "   ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ   ÄÄÄÄÄÄ   ÄÄÄÄÄÄÄÄÄÄÄ   ÄÄÄÄÄÄÄÄÄÄÄ\n";
 #else
-static const char header_line2[] = "   --------------------   ------   -----------   -----------\n";
+//static const char header_line2[] = "   --------------------   ------   -----------   -----------\n";
+//static const char header_line2[] = "   ╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍   ╍╍╍╍╍╍   ╍╍╍╍╍╍╍╍╍╍╍   ╍╍╍╍╍╍╍╍╍╍╍\n";
+static const char header_line2[] = "   ════════════════════   ══════   ═══════════   ═══════════\n";
 #endif
 
 static const char progress_bar_empty[] = "\xe2\x88\x99"; // ∙ (U+2219 BULLET OPERATOR)
