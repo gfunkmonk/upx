@@ -472,7 +472,7 @@ static int do_option(int optc, const char *arg) {
 #endif
 #if WITH_BZIP2
     case 729:
-        opt->method_zstd_seen = true;
+        opt->method_bzip2_seen = true;
         if (!set_method(M_BZIP2, -1))
             e_method(M_BZIP2, opt->level);
         break;

@@ -2,6 +2,12 @@
 User visible changes for UPX
 ==================================================================
 
+Changes in 5.1.3 (18 Mar 2026):
+  * add Zstandard (zstd) compression support
+  * enable bzip2 and multithreading support
+  * ELF: improved loader section handling
+  * bug fixes
+
 Changes in 5.1.2 (XX XXX XXXX):
   * bug fixes - see https://github.com/upx/upx/milestone/23
 

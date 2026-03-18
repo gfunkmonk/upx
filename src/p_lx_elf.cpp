@@ -1887,13 +1887,11 @@ PackLinuxElf64::buildLinuxLoader(
         e_type = get_te16(&hf->ehdr.e_type);
         if (ET_REL == e_type) {
             initLoader(this->e_machine, fold, szfold);
-        fprintf(stderr, "DEBUG: ET_REL path, e_type=%d\n", e_type);
             addLoader(".text", nullptr);
             relocateLoader();
             int sz_unc_int(0);
             uncLoader = linker->getLoader(&sz_unc_int);
             sz_unc = sz_unc_int;
-            fprintf(stderr, "DEBUG ELF2: sz_unc=%u (0x%x)\n", sz_unc, sz_unc);
         }
         else if (ET_EXEC == e_type) {
             hf = (cprElfHdr1 const *)fold;
