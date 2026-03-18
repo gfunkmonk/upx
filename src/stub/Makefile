@@ -218,6 +218,11 @@ PYTHON2    = python2
 PYTHON3    = python3
 UNIX2DOS  := $(PERL) -i -pe 's/$$/\r/;'
 
+# host (native) compiler tools for building the zstd decompressor object
+HOST_CC      ?= /usr/bin/gcc
+HOST_LD      ?= /usr/bin/ld
+HOST_OBJCOPY ?= /usr/bin/objcopy
+
 # trim (strip) trailing whitespace
 RTRIM     := sed -e 's/[ $(tab)]*$$//'
 # squeeze duplicate blank lines, delete empty first & last line
@@ -459,8 +464,8 @@ amd64-linux.elf-fold.h : $(srcdir)/src/$$T.lds \
 	    tmp/amd64-linux.elf-main2.o \
 	    tmp/zstd_d_c.o
 	@echo; echo TARGET=$@  PATH=$(PATH); echo
-	/usr/bin/ld -r -T $(srcdir)/src/$T.lds -Map tmp/$T.map $(filter %.o,$^) -o tmp/$T.bin
-	/usr/bin/objcopy --rename-section ZSTD_DEC.1=ZSTD_DEC --rename-section ZSTD_DEC.2=ZSTD_DEC tmp/$T.bin 2>/dev/null || true
+	$(HOST_LD) -r -T $(srcdir)/src/$T.lds -Map tmp/$T.map $(filter %.o,$^) -o tmp/$T.bin
+	$(HOST_OBJCOPY) --rename-section ZSTD_DEC.1=ZSTD_DEC --rename-section ZSTD_DEC.2=ZSTD_DEC tmp/$T.bin 2>/dev/null || true
 	$(call tc,f-embed_objinfo_without_xstrip_keep_dot_text,tmp/$T.bin)
 	$(call tc,bin2h) tmp/$T.bin $@
 
@@ -508,11 +513,11 @@ tmp/amd64-linux.elf-main2.o : $(srcdir)/src/$$T.c
 	$(call tc,f-objstrip,$@)
 
 tmp/zstd_d_c.o : $(srcdir)/src/c/zstd_d_c.c tmp/.tmp-stamp
-	env PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin /usr/bin/gcc -m64 -O3 -fpic -fvisibility=hidden -fno-exceptions -fno-asynchronous-unwind-tables -fno-stack-protector -fcf-protection=none -fno-builtin-memmove -fno-builtin-memcpy -fno-builtin-memset -fno-builtin-memcmp -fno-tree-loop-distribute-patterns -I$(top_srcdir)/vendor/zstd/lib -DZSTD_DISABLE_ASM=1 -DDYNAMIC_BMI2=0 -DZSTD_NO_INLINE=1 -DHUF_FORCE_DECOMPRESS_X2=1 -DZSTD_TRACE=0 -c $< -o tmp/zstd_d_c_raw.o
-	/usr/bin/ld -shared -Bsymbolic -T $(srcdir)/src/zstd_d_c.lds -o tmp/zstd_d_c.so tmp/zstd_d_c_raw.o 2>/dev/null
-	/usr/bin/objcopy -j .text -j .data -j .rodata -j .rodata.cst16 -j .rodata.cst8 -j .rodata.cst32 --output-target=elf64-x86-64 tmp/zstd_d_c.so tmp/zstd_d_c.o 2>/dev/null
+	env PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin $(HOST_CC) -m64 -O3 -fpic -fvisibility=hidden -fno-exceptions -fno-asynchronous-unwind-tables -fno-stack-protector -fcf-protection=none -fno-builtin-memmove -fno-builtin-memcpy -fno-builtin-memset -fno-builtin-memcmp -fno-tree-loop-distribute-patterns -I$(top_srcdir)/vendor/zstd/lib -DZSTD_DISABLE_ASM=1 -DDYNAMIC_BMI2=0 -DZSTD_NO_INLINE=1 -DHUF_FORCE_DECOMPRESS_X2=1 -DZSTD_TRACE=0 -c $< -o tmp/zstd_d_c_raw.o
+	$(HOST_LD) -shared -Bsymbolic -T $(srcdir)/src/zstd_d_c.lds -o tmp/zstd_d_c.so tmp/zstd_d_c_raw.o 2>/dev/null
+	$(HOST_OBJCOPY) -j .text -j .data -j .rodata -j .rodata.cst16 -j .rodata.cst8 -j .rodata.cst32 --output-target=elf64-x86-64 tmp/zstd_d_c.so tmp/zstd_d_c.o 2>/dev/null
 	python3 -c "import struct; d=bytearray(open('tmp/zstd_d_c.o','rb').read()); struct.pack_into('<H',d,16,1); open('tmp/zstd_d_c.o','wb').write(d)"
-	/usr/bin/objcopy --rename-section .text=ZSTD_DEC --rename-section .data=ZSTD_DEC --rename-section .rodata=ZSTD_DEC -R .comment -R .note -R .note.GNU-stack tmp/zstd_d_c.o
+	$(HOST_OBJCOPY) --rename-section .text=ZSTD_DEC --rename-section .data=ZSTD_DEC --rename-section .rodata=ZSTD_DEC -R .comment -R .note -R .note.GNU-stack tmp/zstd_d_c.o
 
 tmp/amd64-linux.elf-so_main.o : $(srcdir)/src/$$T.c
 	$(call tc,gcc) -c -O $< -o $@

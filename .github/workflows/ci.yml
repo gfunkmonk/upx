@@ -40,6 +40,7 @@ jobs:
           apt-get update && apt-get upgrade -y
           # install system packages
           apt-get install -y --no-install-recommends bash ca-certificates curl git libmpc3 make perl-base python3-minimal tar time xz-utils libc6:i386 zlib1g:i386
+          apt-get install -y gcc binutils
           apt-get install -y gcc-riscv64-linux-gnu
           mkdir ../deps; cd ../deps; mkdir packages
           ### install python2-minimal packages from Debian-11
