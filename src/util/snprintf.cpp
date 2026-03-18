@@ -153,8 +153,6 @@ int upx_safe_vasprintf(char **ptr, const char *format, va_list ap) may_throw {
     if (len >= 0) {
         *ptr = (char *) ::malloc(len + 1);
         assert(*ptr != nullptr);
-        if (*ptr == nullptr)
-            return -1;
         int len2 = upx_safe_vsnprintf(*ptr, len + 1, format, ap);
         assert(len2 == len);
     }

@@ -95,8 +95,13 @@ unsigned UiPacker::update_fu_len = 0;
 // constants
 **************************************************************************/
 
-static const char header_line1[] = "         File size        Ratio      Format         Name\n";
-static const char header_line2[] = "   --------------------   ------   -----------   ----------\n";
+static const char header_line1[] = "        File size         Ratio      Format      Name\n";
+#ifdef __MSDOS__
+static const char header_line2[] = "   ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ   ÄÄÄÄÄÄ   ÄÄÄÄÄÄÄÄÄÄÄ   ÄÄÄÄÄÄÄÄÄÄÄ\n";
+#else
+static const char header_line2[] = "   --------------------   ------   -----------   -----------\n";
+#endif
+
 static const char progress_filler[4 + 1] = ".*[]";
 
 static void init_global_constants(void) noexcept {
