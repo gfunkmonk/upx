@@ -97,31 +97,35 @@ int upx_bzip2_compress(const upx_bytep src, unsigned src_len, upx_bytep dst, uns
 **************************************************************************/
 
 int upx_bzip2_decompress(const upx_bytep src, unsigned src_len, upx_bytep dst, unsigned *dst_len,
-                         int method, const upx_compress_result_t *cresult) {
+                          int method, const upx_compress_result_t *cresult) {
     assert(method == M_BZIP2);
     UNUSED(method);
     UNUSED(cresult);
     bz_stream s{};
-    s.bzalloc = nullptr;
-    s.bzfree = nullptr;
-    s.opaque = nullptr;
     s.next_in = (char *) const_cast<byte *>(src);
     s.avail_in = src_len;
     s.next_out = (char *) dst;
     s.avail_out = *dst_len;
+
     int bz = BZ2_bzDecompressInit(&s, 0, 0);
     if (bz != BZ_OK)
         return convert_errno_from_bzip2(bz);
+
     int r = UPX_E_ERROR;
+    uint64_t produced = 0;
     bool overflow = false;
-    char dummy[1];
+    char overflow_buf[1];
     while (true) {
         if (s.avail_out == 0) {
-            s.next_out = dummy;
-            s.avail_out = sizeof(dummy);
+            s.next_out = overflow_buf;
+            s.avail_out = sizeof(overflow_buf);
         }
         bz = BZ2_bzDecompress(&s);
-        const uint64_t produced = (uint64_t(s.total_out_hi32) << 32) | s.total_out_lo32;
+        produced = (uint64_t(s.total_out_hi32) << 32) | s.total_out_lo32;
+        if (s.next_out == overflow_buf && s.avail_out < sizeof(overflow_buf))
+            overflow = true;
+        if (produced > UINT_MAX)
+            overflow = true;
         if (produced > *dst_len)
             overflow = true;
         if (bz == BZ_STREAM_END) {
@@ -137,7 +141,9 @@ int upx_bzip2_decompress(const upx_bytep src, unsigned src_len, upx_bytep dst, u
             break;
         }
     }
-    *dst_len = s.total_out_lo32;
+
+    // Clamp to the representable range even when overflow has been reported.
+    *dst_len = produced > UINT_MAX ? UINT_MAX : (unsigned) produced;
     BZ2_bzDecompressEnd(&s);
     return r;
 }
