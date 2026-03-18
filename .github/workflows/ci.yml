@@ -61,6 +61,7 @@ jobs:
           git config --global --add safe.directory '*' # needed when running in a container
           git clone --branch "$GITHUB_REF_NAME" --depth 1 "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY" .
           git submodule update --init -- vendor/lzma-sdk
+          git submodule update --init -- vendor/zstd
           git fsck --strict --progress
       - name: Rebuild and verify stubs
         run: |
