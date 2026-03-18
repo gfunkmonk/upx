@@ -36,13 +36,11 @@ void bzip2_compress_config_t::reset() noexcept { mem_clear(this); }
 #include "compress.h"
 #include "../util/membuffer.h"
 
-#if defined(BZ_NO_STDIO) || 1
-// we need to supply bz_internal_error() when building with BZ_NO_STDIO
+// we need to supply bz_internal_error() because vendor/bzip2 is built with BZ_NO_STDIO
 extern "C" {
 extern void bz_internal_error(int);
 void bz_internal_error(int errcode) { throwInternalError("bz_internal_error %d", errcode); }
 }
-#endif // BZ_NO_STDIO
 
 static int convert_errno_from_bzip2(int r) {
     switch (r) {
@@ -50,7 +48,12 @@ static int convert_errno_from_bzip2(int r) {
         return UPX_E_OK;
     case BZ_MEM_ERROR:
         return UPX_E_OUT_OF_MEMORY;
-    // TODO later: convert to UPX_E_INPUT_OVERRUN, UPX_E_OUTPUT_OVERRUN
+    case BZ_DATA_ERROR:
+    case BZ_DATA_ERROR_MAGIC:
+    case BZ_UNEXPECTED_EOF:
+        return UPX_E_INPUT_OVERRUN;
+    case BZ_OUTBUFF_FULL:
+        return UPX_E_OUTPUT_OVERRUN;
     default:
         break;
     }
@@ -94,15 +97,55 @@ int upx_bzip2_compress(const upx_bytep src, unsigned src_len, upx_bytep dst, uns
 **************************************************************************/
 
 int upx_bzip2_decompress(const upx_bytep src, unsigned src_len, upx_bytep dst, unsigned *dst_len,
-                         int method, const upx_compress_result_t *cresult) {
+                          int method, const upx_compress_result_t *cresult) {
     assert(method == M_BZIP2);
     UNUSED(method);
     UNUSED(cresult);
-    char *dest = (char *) dst;
-    char *source = (char *) const_cast<byte *>(src);
-    int small = 0;
-    int r = BZ2_bzBuffToBuffDecompress(dest, dst_len, source, src_len, small, 0);
-    return convert_errno_from_bzip2(r);
+    bz_stream s{};
+    s.next_in = (char *) const_cast<byte *>(src);
+    s.avail_in = src_len;
+    s.next_out = (char *) dst;
+    s.avail_out = *dst_len;
+
+    int bz = BZ2_bzDecompressInit(&s, 0, 0);
+    if (bz != BZ_OK)
+        return convert_errno_from_bzip2(bz);
+
+    int r = UPX_E_ERROR;
+    uint64_t produced = 0;
+    bool overflow = false;
+    char overflow_buf[1];
+    while (true) {
+        if (s.avail_out == 0) {
+            s.next_out = overflow_buf;
+            s.avail_out = sizeof(overflow_buf);
+        }
+        bz = BZ2_bzDecompress(&s);
+        produced = (uint64_t(s.total_out_hi32) << 32) | s.total_out_lo32;
+        if (s.next_out == overflow_buf && s.avail_out < sizeof(overflow_buf))
+            overflow = true;
+        if (produced > UINT_MAX)
+            overflow = true;
+        if (produced > *dst_len)
+            overflow = true;
+        if (bz == BZ_STREAM_END) {
+            r = overflow ? UPX_E_OUTPUT_OVERRUN : UPX_E_OK;
+            break;
+        }
+        if (bz != BZ_OK) {
+            r = overflow ? UPX_E_OUTPUT_OVERRUN : convert_errno_from_bzip2(bz);
+            break;
+        }
+        if (s.avail_in == 0) {
+            r = overflow ? UPX_E_OUTPUT_OVERRUN : UPX_E_INPUT_OVERRUN;
+            break;
+        }
+    }
+
+    // Clamp to the representable range even when overflow has been reported.
+    *dst_len = produced > UINT_MAX ? UINT_MAX : (unsigned) produced;
+    BZ2_bzDecompressEnd(&s);
+    return r;
 }
 
 /*************************************************************************
@@ -187,23 +230,24 @@ TEST_CASE("compress_bzip2") { CHECK(check_bzip2(M_BZIP2, 9, 46)); }
 #endif // DEBUG
 
 TEST_CASE("upx_bzip2_decompress") {
-#if 0  // TODO later, see above
     const byte *c_data;
-    byte d_buf[32];
+    byte d_buf[16];
     unsigned d_len;
     int r;
 
-    c_data = (const byte *) "\x28\xb5\x2f\xfd\x20\x20\x3d\x00\x00\x08\xff\x01\x00\x34\x4e\x08";
-    d_len = 32;
-    r = upx_bzip2_decompress(c_data, 16, d_buf, &d_len, M_BZIP2, nullptr);
-    CHECK((r == 0 && d_len == 32));
-    r = upx_bzip2_decompress(c_data, 15, d_buf, &d_len, M_BZIP2, nullptr);
+    // 16 zero bytes compressed with bzip2
+    c_data = (const byte *) "\x42\x5a\x68\x39\x31\x41\x59\x26\x53\x59\xaa\xd2\xdd\x37\x00\x00"
+                            "\x00\x40\x00\x40\x04\x20\x00\x21\x00\x82\x83\x17\x72\x45\x38\x50"
+                            "\x90\xaa\xd2\xdd\x37";
+    d_len = 16;
+    r = upx_bzip2_decompress(c_data, 37, d_buf, &d_len, M_BZIP2, nullptr);
+    CHECK((r == 0 && d_len == 16));
+    r = upx_bzip2_decompress(c_data, 36, d_buf, &d_len, M_BZIP2, nullptr);
     CHECK(r == UPX_E_INPUT_OVERRUN);
-    d_len = 31;
-    r = upx_bzip2_decompress(c_data, 16, d_buf, &d_len, M_BZIP2, nullptr);
+    d_len = 15;
+    r = upx_bzip2_decompress(c_data, 37, d_buf, &d_len, M_BZIP2, nullptr);
     CHECK(r == UPX_E_OUTPUT_OVERRUN);
     UNUSED(r);
-#endif // TODO
 }
 
 #endif // WITH_BZIP2

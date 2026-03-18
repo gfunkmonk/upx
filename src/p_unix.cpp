@@ -487,7 +487,7 @@ unsigned PackUnix::unpackExtent(unsigned wanted, OutputFile *fo,
         int const sz_cpr = ph.c_len = get_te32(&hdr.sz_cpr);
         ph.filter_cto = hdr.b_cto8;
 
-        if (sz_unc == 0 || (M_LZMA < hdr.b_method && hdr.b_method != M_ZSTD)) {
+        if (sz_unc == 0 || (M_LZMA < hdr.b_method && hdr.b_method != M_ZSTD && !M_IS_BZIP2(hdr.b_method))) {
             throwCantUnpack("corrupt b_info");
             break;
         }

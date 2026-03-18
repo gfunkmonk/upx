@@ -288,7 +288,7 @@ void show_help(int verbose) {
                     "  --zstd              try zstd [fast decompression]\n"
 #endif
 #if WITH_BZIP2
-                    "  --bzip2             try bzip2 \n"
+                    "  --bzip2             try bzip2 [an older algorithm]\n"
 #endif
                     "  --brute             try all available compression methods & filters [slow]\n"
                     "  --ultra-brute       try even more compression variants [very slow]\n"
