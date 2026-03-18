@@ -56,8 +56,10 @@ struct UiPacker::State final {
     int pass;
     int total_passes;
 
-    // message stuff
-    char msg_buf[1 + 79 + 1];
+    // message stuff; extra space needed because the progress bar fill char '•'
+    // is a 3-byte UTF-8 sequence (\xe2\x80\xa2) so the byte count exceeds the
+    // display width (bar_len of up to 64 display chars × 3 bytes = 192 bytes)
+    char msg_buf[1 + 256 + 1];
     int pos;               // last progress bar position
     unsigned spin_counter; // for spinner
 
@@ -102,7 +104,11 @@ static const char header_line2[] = "   ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 
 static const char header_line2[] = "   --------------------   ------   -----------   -----------\n";
 #endif
 
-static const char progress_filler[4 + 1] = ".*[]";
+static const char progress_bar_empty = '.';
+static const char progress_bar_full[] = "\xe2\x80\xa2"; // • (U+2022 BULLET)
+static const int progress_bar_full_len = (int) (sizeof(progress_bar_full) - 1);
+static const char progress_bar_left = '[';
+static const char progress_bar_right = ']';
 
 static void init_global_constants(void) noexcept {
 #if 0 && (ACC_OS_DOS16 || ACC_OS_DOS32)
@@ -402,10 +408,16 @@ void UiPacker::doCallback(unsigned isize, unsigned osize) {
 
     // fill the progress bar
     char *m = &s->msg_buf[s->bar_pos];
-    *m++ = progress_filler[2];
-    for (i = 0; i < s->bar_len; i++)
-        *m++ = progress_filler[i <= pos ? 1 : 0];
-    *m++ = progress_filler[3];
+    *m++ = progress_bar_left;
+    for (i = 0; i < s->bar_len; i++) {
+        if (i <= pos) {
+            memcpy(m, progress_bar_full, progress_bar_full_len);
+            m += progress_bar_full_len;
+        } else {
+            *m++ = progress_bar_empty;
+        }
+    }
+    *m++ = progress_bar_right;
 
     // compute current compression ratio
     unsigned ratio = 1000000;
@@ -415,7 +427,7 @@ void UiPacker::doCallback(unsigned isize, unsigned osize) {
     int buflen = (int) (&s->msg_buf[sizeof(s->msg_buf)] - m);
     upx_safe_snprintf(m, buflen, "  %3d.%1d%%  %c ", ratio / 10000, (ratio % 10000) / 1000,
                       spinner[s->spin_counter & 3]);
-    assert(strlen(s->msg_buf) < 1 + 80);
+    assert((size_t)(m - s->msg_buf) + 12 < sizeof(s->msg_buf)); // 12: max bytes for "  %3d.%1d%%  %c \0"
 
     s->pos = pos;
     s->spin_counter++;
