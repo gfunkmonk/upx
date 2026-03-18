@@ -126,6 +126,8 @@ int upx_bzip2_decompress(const upx_bytep src, unsigned src_len, upx_bytep dst, u
             overflow = true;
         if (produced > UINT_MAX)
             overflow = true;
+        if (produced > *dst_len)
+            overflow = true;
         if (bz == BZ_STREAM_END) {
             r = overflow ? UPX_E_OUTPUT_OVERRUN : UPX_E_OK;
             break;
@@ -136,11 +138,6 @@ int upx_bzip2_decompress(const upx_bytep src, unsigned src_len, upx_bytep dst, u
         }
         if (s.avail_in == 0) {
             r = overflow ? UPX_E_OUTPUT_OVERRUN : UPX_E_INPUT_OVERRUN;
-            break;
-        }
-        if (!overflow && s.next_out != overflow_detect_buffer && s.avail_out == 0) {
-            overflow = true;
-            r = UPX_E_OUTPUT_OVERRUN;
             break;
         }
     }
