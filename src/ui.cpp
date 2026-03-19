@@ -97,14 +97,11 @@ unsigned UiPacker::update_fu_len = 0;
 // constants
 **************************************************************************/
 
-//static const char header_line1[] = "\033[33m        File size         Ratio      Format      Name\033[0m\n";
-static const char header_line1[] = "\033[33m         File size          Ratio      Format     Name\033[0m\n";
+static const char header_line1[] = "\033[33m         File size          Ratio      Format        Name\033[0m\n";
 #ifdef __MSDOS__
-//static const char header_line2[] = "\033[2;36m   ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ   ÄÄÄÄÄÄ   ÄÄÄÄÄÄÄÄÄÄÄ   ÄÄÄÄÄÄÄÄÄÄÄ\033[0m\n";
-static const char header_line2[] = "\033[2;36m   ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ   ÄÄÄÄÄÄÄ   ÄÄÄÄÄÄÄÄÄÄÄ   ÄÄÄÄÄÄÄÄÄÄÄ\033[0m\n";
+static const char header_line2[] = "\033[2;36m   ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ    ÄÄÄÄÄÄÄ   ÄÄÄÄÄÄÄÄÄÄÄ   ÄÄÄÄÄÄÄÄÄÄÄ\033[0m\n";
 #else
-//static const char header_line2[] = "\033[2;36m   ════════════════════   ══════   ═══════════   ═══════════\033[0m\n";
-static const char header_line2[] = "\033[2;36m   ═════════════════════   ═══════   ══════════   ═══════════\033[0m\n";
+static const char header_line2[] = "\033[2;36m   ════════════════════    ═══════   ═══════════   ═══════════\033[0m\n";
 #endif
 
 static const char progress_bar_empty[] = "\xe2\x88\x99"; // ∙ (U+2219 BULLET OPERATOR)
@@ -144,7 +141,7 @@ static const char *mkline(upx_uint64_t fu_len, upx_uint64_t fc_len, upx_uint64_t
                           bool decompress = false) {
     static char buf[2048]; // static! // TODO later: check if affected by WITH_THREADS
     char r[7 + 1];
-    char fn[15 + 1];
+    char fn[17 + 1];
     const char *f;
 
     // Large ratios can happen because of overlays that are
@@ -155,11 +152,11 @@ static const char *mkline(upx_uint64_t fu_len, upx_uint64_t fc_len, upx_uint64_t
     else
         upx_safe_snprintf(r, sizeof(r), "%3u.%02u%%", ratio / 10000, (ratio % 10000) / 100);
     if (decompress)
-        f = "%10lld <-%10lld  %7s %15s %s";
+        f = "%10lld <-%10lld  %8s %16s  %s";
     else
-        f = "%10lld ->%10lld  %7s %15s %s";
+       f = "%10lld ->%10lld  %8s %16s  %s";
     center_string(fn, sizeof(fn), format_name);
-    assert(strlen(fn) == 15);
+    assert(strlen(fn) == 17);
     upx_safe_snprintf(buf, sizeof(buf), f, (long long) fu_len, (long long) fc_len, r, fn, filename);
     UNUSED(u_len);
     UNUSED(c_len);
