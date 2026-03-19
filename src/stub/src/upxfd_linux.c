@@ -165,7 +165,7 @@ unsigned long upx_mmap_and_fd_linux( // returns (mapped_addr | (1+ fd))
         if (fd < 0) {
             if (-EISDIR == fd) { // no memfd_create often lacks O_TMPFILE, too
                 write(2, addr_string(
-                    "Error: needs memfd_create(), or needs /dev/shm(,O_TMPFILE,)\\n"), 61);
+                    "UPX-5.0 wants memfd_create(), or needs /dev/shm(,O_TMPFILE,)\\n"), 61);
                 exit(127);
             }
             // Error from open() is unknown. Cause later SIGSEGV.
