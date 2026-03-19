@@ -719,7 +719,7 @@ static noinline const char *getIdentstr(unsigned *size, int small) {
         "\n"
         "$Id: UPX "
         "(C) 1996-" UPX_VERSION_YEAR " the UPX Team. All Rights Reserved. http://upx.sf.net $"
-        "\n"; */
+        "\n";
     static char identtiny[] = UPX_VERSION_STRING4;
 
     static upx_std_once_flag init_done;
