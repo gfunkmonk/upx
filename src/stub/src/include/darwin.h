@@ -106,7 +106,6 @@ extern ssize_t write(int, char const *, size_t);
 
 #define UPX_MAGIC_LE32  0x21585055          // "UPX!"
 
-
 #define nrv_byte unsigned char
 typedef unsigned int nrv_uint;
 

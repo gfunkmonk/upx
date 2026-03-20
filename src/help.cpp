@@ -93,14 +93,14 @@ void show_header() {
     fg = con_fg(f, FG_GREEN);
     // clang-format off
     con_fprintf(f,
-                "                       Ultimate Packer for eXecutables\n"
-                "                          Copyright (C) 1996 - " UPX_VERSION_YEAR "\n"
+                "\033[1;37m                       Ultimate Packer for eXecutables\033[0m\n"
+                "\033[1;37m                          Copyright (C) 1996 - " UPX_VERSION_YEAR "\033[0m\n"
 #if defined(UPX_VERSION_GITREV)
-                "UPX git-%6.6s%c"
+                "\033[38;2;255;99;71mUPX git-%6.6s%c\033[0m"
 #else
-                "UPX %-11s"
+                "\033[38;2;255;99;71mUPX\033[38;2;71;227;255m %-11s\033[0m"
 #endif
-                " Markus Oberhumer, Laszlo Molnar & John Reiser  %14s\n\n",
+                "\033[1;30m Markus Oberhumer, Laszlo Molnar & John Reiser\033[0m  \033[38;2;228;111;174m%14s\033[0m\n\n",
 #if defined(UPX_VERSION_GITREV)
                 gitrev,
                 (sizeof(gitrev)-1 > 6 && gitrev[sizeof(gitrev)-2] == '+') ? '+' : ' ',
@@ -120,7 +120,7 @@ void show_header() {
 void show_usage() {
     FILE *f = con_term;
 
-    con_fprintf(f, "Usage: %s [-123456789dlthVL] [-qvfk] [-o file] %sfile..\n", progname,
+    con_fprintf(f, "\033[1;37mUsage: %s [-123456789dlthVL] [-qvfk] [-o file] %sfile..\033[0m\n", progname,
 #if (ACC_OS_DOS32) && defined(__DJGPP__)
                 "[@]");
 #else
@@ -246,7 +246,7 @@ void show_help(int verbose) {
 
     // clang-format off
     fg = con_fg(f, FG_YELLOW);
-    con_fprintf(f, "\nCommands:\n");
+    con_fprintf(f, "\n\033[38;2;152;255;152mCommands:\033[0m\n");
     fg = con_fg(f, fg);
     con_fprintf(f,
                 "  -1     compress faster                   -9    compress better\n"
@@ -261,7 +261,7 @@ void show_help(int verbose) {
                 verbose == 0 ? "" : "\n");
 
     fg = con_fg(f, FG_YELLOW);
-    con_fprintf(f, "Options:\n");
+    con_fprintf(f, "\033[38;2;19;188;253mOptions:\033[0m\n");
     fg = con_fg(f, fg);
 
     con_fprintf(f,
@@ -280,7 +280,7 @@ void show_help(int verbose) {
     if (verbose > 0)
     {
         fg = con_fg(f, FG_YELLOW);
-        con_fprintf(f, "\nCompression tuning options:\n");
+        con_fprintf(f, "\n\033[38;2;142;235;236mCompression tuning options:\033[0m\n");
         fg = con_fg(f, fg);
         con_fprintf(f,
                     "  --lzma              try LZMA [slower but tighter than NRV]\n"
@@ -294,14 +294,14 @@ void show_help(int verbose) {
                     "  --ultra-brute       try even more compression variants [very slow]\n"
                     "\n");
         fg = con_fg(f, FG_YELLOW);
-        con_fprintf(f, "Backup options:\n");
+        con_fprintf(f, "\033[38;2;255;105;180mBackup options:\033[0m\n");
         fg = con_fg(f, fg);
         con_fprintf(f,
                     "  -k, --backup        keep backup files\n"
                     "  --no-backup         no backup files [default]\n"
                     "\n");
         fg = con_fg(f, FG_YELLOW);
-        con_fprintf(f, "Overlay options:\n");
+        con_fprintf(f, "\033[38;2;255;165;0mOverlay options:\033[0m\n");
         fg = con_fg(f, fg);
         con_fprintf(f,
                     "  --overlay=copy      copy any extra data attached to the file [default]\n"
@@ -309,7 +309,7 @@ void show_help(int verbose) {
                     "  --overlay=skip      don't compress a file with an overlay\n"
                     "\n");
         fg = con_fg(f, FG_YELLOW);
-        con_fprintf(f, "File system options:\n");
+        con_fprintf(f, "\033[38;2;223;115;255mFile system options:\033[0m\n");
         fg = con_fg(f, fg);
         con_fprintf(f,
                     "  --force-overwrite   force overwrite of output files\n"
@@ -322,32 +322,32 @@ void show_help(int verbose) {
                     "  --no-time           do not preserve file timestamp\n"
                     "\n");
         fg = con_fg(f, FG_YELLOW);
-        con_fprintf(f, "Options for djgpp2/coff:\n");
+        con_fprintf(f, "\033[38;2;255;222;173mOptions for djgpp2/coff:\033[0m\n");
         fg = con_fg(f, fg);
         con_fprintf(f,
                     "  --coff              produce COFF output [default: EXE]\n"
                     "\n");
         fg = con_fg(f, FG_YELLOW);
-        con_fprintf(f, "Options for dos/com:\n");
+        con_fprintf(f, "\033[1;32mOptions for dos/com:\033[0m\n");
         fg = con_fg(f, fg);
         con_fprintf(f,
                     "  --8086              make compressed com work on any 8086\n"
                     "\n");
         fg = con_fg(f, FG_YELLOW);
-        con_fprintf(f, "Options for dos/exe:\n");
+        con_fprintf(f, "\033[1;33mOptions for dos/exe:\033[0m\n");
         fg = con_fg(f, fg);
         con_fprintf(f,
                     "  --8086              make compressed exe work on any 8086\n"
                     "  --no-reloc          put no relocations in to the exe header\n"
                     "\n");
         fg = con_fg(f, FG_YELLOW);
-        con_fprintf(f, "Options for dos/sys:\n");
+        con_fprintf(f, "\033[38;2;255;99;71mOptions for dos/sys:\033[0m\n");
         fg = con_fg(f, fg);
         con_fprintf(f,
                     "  --8086              make compressed sys work on any 8086\n"
                     "\n");
         fg = con_fg(f, FG_YELLOW);
-        con_fprintf(f, "Options for ps1/exe:\n");
+        con_fprintf(f, "\033[1;36mOptions for ps1/exe:\033[0m\n");
         fg = con_fg(f, fg);
         con_fprintf(f,
                     "  --8-bit             uses 8 bit size compression [default: 32 bit]\n"
@@ -356,13 +356,13 @@ void show_help(int verbose) {
                     "  --no-align          don't align to 2048 bytes [enables: --console-run]\n"
                     "\n");
         fg = con_fg(f, FG_YELLOW);
-        con_fprintf(f, "Options for watcom/le:\n");
+        con_fprintf(f, "\033[38;2;252;14;169mOptions for watcom/le:\033[0m\n");
         fg = con_fg(f, fg);
         con_fprintf(f,
                     "  --le                produce LE output [default: EXE]\n"
                     "\n");
         fg = con_fg(f, FG_YELLOW);
-        con_fprintf(f, "Options for win32/pe, win64/pe & rtm32/pe:\n");
+        con_fprintf(f, "\033[38;2;143;0;255mOptions for win32/pe, win64/pe & rtm32/pe:\033[0m\n");
         fg = con_fg(f, fg);
         con_fprintf(f,
                     "  --compress-exports=0    do not compress the export section\n"
@@ -377,7 +377,7 @@ void show_help(int verbose) {
                     "  --strip-relocs=1        strip relocations [default]\n"
                     "\n");
         fg = con_fg(f, FG_YELLOW);
-        con_fprintf(f, "Options for linux/elf:\n");
+        con_fprintf(f, "\033[38;2;0;204;153mOptions for linux/elf:\033[0m\n");
         fg = con_fg(f, fg);
         con_fprintf(f,
                     "  --preserve-build-id     copy .gnu.note.build-id to compressed output\n"
@@ -390,15 +390,15 @@ void show_help(int verbose) {
 
     if (verbose > 0) {
         fg = con_fg(f, FG_YELLOW);
-        con_fprintf(f, "\nThis version supports:\n");
+        con_fprintf(f, "\n\033[1;37mThis version supports:\033[0m\n");
         fg = con_fg(f, fg);
         list_all_packers(f, verbose);
     } else {
-        con_fprintf(f, "\nType '%s --help' for more detailed help.\n", progname);
+        con_fprintf(f, "\n\033[1;37mType '%s --help' for more detailed help.\033[0m\n", progname);
     }
 
-    con_fprintf(f, "\nUPX comes with ABSOLUTELY NO WARRANTY; "
-                   "for details visit https://upx.github.io\n");
+    con_fprintf(f, "\n\033[1;31mUPX comes with ABSOLUTELY NO WARRANTY; \033[0m"
+                   "\033[38;2;255;253;208mfor details visit https://upx.github.io\033[0m\n");
 
 #if DEBUG || TESTING
     fg = con_fg(f, FG_RED);
@@ -546,7 +546,7 @@ void show_sysinfo(const char *options_var) {
     show_header();
 
     if (opt->verbose >= 1) {
-        con_fprintf(f, "UPX version: ");
+        con_fprintf(f, "\033[38;2;255;215;255mUPX version: \033[0m");
         fflush(f);
         show_version(true);
         con_fprintf(f, "UPX version internal: 0x%06x %s\n", UPX_VERSION_HEX, UPX_VERSION_STRING);

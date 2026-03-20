@@ -17,14 +17,21 @@
 #   - install
 #   - print summary
 
+find_program(CCACHE_PROGRAM ccache)
+if(CCACHE_PROGRAM)
+  message(STATUS "Setting up ccache ...")
+  set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
+  set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
+endif()
+
 # CMake version check; using a somewhat current CMake version is highly recommended
 file(REMOVE "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/.upx_cmake_config_done.txt")
 if(DEFINED UPX_CONFIG_CMAKE_MINIMUM_REQUIRED_VERSION)
     cmake_minimum_required(VERSION "${UPX_CONFIG_CMAKE_MINIMUM_REQUIRED_VERSION}" FATAL_ERROR)
-elseif(NOT ${CMAKE_VERSION} VERSION_LESS "3.10")
-    cmake_minimum_required(VERSION "3.10" FATAL_ERROR)
+elseif(NOT ${CMAKE_VERSION} VERSION_LESS "3.18")
+    cmake_minimum_required(VERSION "3.18" FATAL_ERROR)
 else()
-    cmake_minimum_required(VERSION "3.8" FATAL_ERROR) # CMake >= 3.8 is needed for CXX_STANDARD 17
+    cmake_minimum_required(VERSION "3.12" FATAL_ERROR) # CMake >= 3.12 is needed for CXX_STANDARD 20
 endif()
 
 # support functions and some utility
@@ -64,7 +71,7 @@ option(UPX_CONFIG_DISABLE_EXHAUSTIVE_TESTS "Do not run exhaustive tests."       
 # init
 #***********************************************************************
 
-set(UPX_VERSION_STRING "5.1.2") # this should match src/version.h
+set(UPX_VERSION_STRING "5.1.3") # this should match src/version.h
 
 upx_cmake_include_hook(2_init)
 
@@ -280,7 +287,7 @@ if(Threads_FOUND)
         if(NOT UPX_CONFIG_DISABLE_CXX_STANDARD)
             try_compile(result "${CMAKE_CURRENT_BINARY_DIR}"
                         "${CMAKE_CURRENT_SOURCE_DIR}/misc/cmake/try_compile/${f}"
-                        OUTPUT_VARIABLE output CXX_STANDARD 17)
+                        OUTPUT_VARIABLE output CXX_STANDARD 20)
         else()
             try_compile(result "${CMAKE_CURRENT_BINARY_DIR}"
                         "${CMAKE_CURRENT_SOURCE_DIR}/misc/cmake/try_compile/${f}"
@@ -328,7 +335,7 @@ endif() # UPX_CONFIG_DISABLE_ZSTD
 upx_add_glob_files(upx_SOURCES "src/*.cpp" "src/[cfu]*/*.cpp")
 add_executable(upx ${upx_SOURCES})
 if(NOT UPX_CONFIG_DISABLE_CXX_STANDARD)
-    set_property(TARGET upx PROPERTY CXX_STANDARD 17)
+    set_property(TARGET upx PROPERTY CXX_STANDARD 20)
 endif()
 target_link_libraries(upx upx_vendor_ucl upx_vendor_zlib)
 if(NOT UPX_CONFIG_DISABLE_BZIP2)

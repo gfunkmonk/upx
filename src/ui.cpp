@@ -56,8 +56,10 @@ struct UiPacker::State final {
     int pass;
     int total_passes;
 
-    // message stuff
-    char msg_buf[1 + 79 + 1];
+    // message stuff; extra space needed because the progress bar fill '•' and
+    // empty '∙' chars are 3-byte UTF-8 sequences so the byte count exceeds the
+    // display width (bar_len of up to 64 display chars × 3 bytes = 192 bytes)
+    char msg_buf[1 + 256 + 1];
     int pos;               // last progress bar position
     unsigned spin_counter; // for spinner
 
@@ -95,10 +97,21 @@ unsigned UiPacker::update_fu_len = 0;
 // constants
 **************************************************************************/
 
-static const char header_line1[] = "        File size         Ratio      Format      Name\n";
-static const char header_line2[] = "   --------------------   ------   -----------   -----------\n";
+static const char header_line1[] = "\033[33m       File size        Ratio       Format         Name\033[0m\n";
+#ifdef __MSDOS__
+static const char header_line2[] = "\033[2;36m   ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ   ÄÄÄÄÄÄ    ÄÄÄÄÄÄÄÄÄÄÄ   ÄÄÄÄÄÄÄÄÄÄÄÄ\033[0m\n";
+#else
+//static const char header_line2[] = "\033[2;36m   ═════════════════   ══════    ═══════════   ════════════\033[0m\n";
+//static const char header_line2[] = "\033[2;36m   ₪₪₪₪₪₪₪₪₪₪₪₪₪₪₪₪₪   ₪₪₪₪₪₪    ₪₪₪₪₪₪₪₪₪₪₪   ₪₪₪₪₪₪₪₪₪₪₪₪\033[0m\n";
+static const char header_line2[] = "\033[2;36m   ≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡   ≡≡≡≡≡≡    ≡≡≡≡≡≡≡≡≡≡≡   ≡≡≡≡≡≡≡≡≡≡≡≡\033[0m\n";
+#endif
 
-static const char progress_filler[4 + 1] = ".*[]";
+static const char progress_bar_empty[] = "\xe2\x88\x99"; // ∙ (U+2219 BULLET OPERATOR)
+static const int progress_bar_empty_len = (int) (sizeof(progress_bar_empty) - 1);
+static const char progress_bar_full[] = "\xe2\x80\xa2"; // • (U+2022 BULLET)
+static const int progress_bar_full_len = (int) (sizeof(progress_bar_full) - 1);
+static const char progress_bar_left = '[';
+static const char progress_bar_right = ']';
 
 static void init_global_constants(void) noexcept {
 #if 0 && (ACC_OS_DOS16 || ACC_OS_DOS32)
@@ -125,28 +138,61 @@ static void init_global_constants(void) noexcept {
 //
 **************************************************************************/
 
+// Format a file size as a human-readable string (B / KB / MB), right-aligned
+// in a 9-character field (e.g., "   512 B ", " 123.4 KB", "   1.2 MB").
+static void format_size(char *buf, size_t bufsiz, upx_uint64_t size) {
+    if (size < 1024ULL)
+        upx_safe_snprintf(buf, bufsiz, "%5lld B", (long long) size);
+    else if (size < 1024ULL * 1024)
+        upx_safe_snprintf(buf, bufsiz, "%6.1f KB", (double) size / 1024.0);
+    else
+        upx_safe_snprintf(buf, bufsiz, "%6.1f MB", (double) size / (1024.0 * 1024.0));
+}
+
 static const char *mkline(upx_uint64_t fu_len, upx_uint64_t fc_len, upx_uint64_t u_len,
                           upx_uint64_t c_len, const char *format_name, const char *filename,
                           bool decompress = false) {
     static char buf[2048]; // static! // TODO later: check if affected by WITH_THREADS
-    char r[7 + 1];
-    char fn[15 + 1];
+    char r[32]; // ratio string, including ANSI color codes
+    char fn[17 + 1];
+    char fu_buf[16], fc_buf[16];
     const char *f;
+
+    // Format file sizes as KB / MB
+    format_size(fu_buf, sizeof(fu_buf), fu_len);
+    format_size(fc_buf, sizeof(fc_buf), fc_len);
 
     // Large ratios can happen because of overlays that are
     // appended after a program is packed.
     unsigned ratio = get_ratio(fu_len, fc_len);
-    if (ratio >= 1000 * 1000)
-        strcpy(r, "overlay");
-    else
-        upx_safe_snprintf(r, sizeof(r), "%3u.%02u%%", ratio / 10000, (ratio % 10000) / 100);
+    if (ratio >= 1000 * 1000) {
+        // red: file grew or is an overlay
+        strcpy(r, " \033[91moverlay\033[0m");
+    } else {
+        char ratio_str[8];
+        upx_safe_snprintf(ratio_str, sizeof(ratio_str), "%3u.%02u%%", ratio / 10000,
+                          (ratio % 10000) / 100);
+        // green  < 70%: good compression
+        // yellow 70-99%: moderate compression
+        // red   >= 100%: no or negative compression
+        const char *color;
+        if (ratio < 700000)
+            color = "\033[92m"; // green
+        else if (ratio < 1000000)
+            color = "\033[93m"; // yellow
+        else
+            color = "\033[91m"; // red
+        upx_safe_snprintf(r, sizeof(r), " %s%s\033[0m", color, ratio_str);
+    }
     if (decompress)
-        f = "%10lld <-%10lld  %7s %15s %s";
+        f = "%s %s %s %16s%s";
+        //f = "%s <-%s %s %16s%s";
     else
-        f = "%10lld ->%10lld  %7s %15s %s";
+        f = "%s %s %s %16s%s";
+        //f = "%s ->%s %s %16s%s";
     center_string(fn, sizeof(fn), format_name);
-    assert(strlen(fn) == 15);
-    upx_safe_snprintf(buf, sizeof(buf), f, (long long) fu_len, (long long) fc_len, r, fn, filename);
+    assert(strlen(fn) == 17);
+    upx_safe_snprintf(buf, sizeof(buf), f, fu_buf, fc_buf, r, fn, filename);
     UNUSED(u_len);
     UNUSED(c_len);
     return buf;
@@ -398,10 +444,17 @@ void UiPacker::doCallback(unsigned isize, unsigned osize) {
 
     // fill the progress bar
     char *m = &s->msg_buf[s->bar_pos];
-    *m++ = progress_filler[2];
-    for (i = 0; i < s->bar_len; i++)
-        *m++ = progress_filler[i <= pos ? 1 : 0];
-    *m++ = progress_filler[3];
+    *m++ = progress_bar_left;
+    for (i = 0; i < s->bar_len; i++) {
+        if (i <= pos) {
+            memcpy(m, progress_bar_full, progress_bar_full_len);
+            m += progress_bar_full_len;
+        } else {
+            memcpy(m, progress_bar_empty, progress_bar_empty_len);
+            m += progress_bar_empty_len;
+        }
+    }
+    *m++ = progress_bar_right;
 
     // compute current compression ratio
     unsigned ratio = 1000000;
@@ -411,7 +464,7 @@ void UiPacker::doCallback(unsigned isize, unsigned osize) {
     int buflen = (int) (&s->msg_buf[sizeof(s->msg_buf)] - m);
     upx_safe_snprintf(m, buflen, "  %3d.%1d%%  %c ", ratio / 10000, (ratio % 10000) / 1000,
                       spinner[s->spin_counter & 3]);
-    assert(strlen(s->msg_buf) < 1 + 80);
+    assert((size_t)(m - s->msg_buf) + 12 < sizeof(s->msg_buf)); // 12: max bytes for "  %3d.%1d%%  %c \0"
 
     s->pos = pos;
     s->spin_counter++;
@@ -475,7 +528,7 @@ void UiPacker::uiPackEnd(const OutputFile *fo) {
 
 /*static*/ void UiPacker::uiPackTotal() {
     uiListTotal();
-    uiFooter("Packed");
+    uiFooter("   Packed");
 }
 
 /*************************************************************************
@@ -506,7 +559,7 @@ void UiPacker::uiUnpackEnd(const OutputFile *fo) {
 
 /*static*/ void UiPacker::uiUnpackTotal() {
     uiListTotal(true);
-    uiFooter("Unpacked");
+    uiFooter("   Unpacked");
 }
 
 /*************************************************************************
