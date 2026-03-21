@@ -98,7 +98,7 @@ void show_header() {
 #else
                 "\033[38;2;255;99;71mUPX\033[38;2;71;227;255m %-11s\033[0m\033[1;37m        Ultimate Packer for eXecutables\033[0m\n"
 #endif
-                "\033[38;2;228;111;174m%13s\033[0m\033[1;37m             Copyright (C) 1996 - " UPX_VERSION_YEAR "\033[0m\n"
+                "\033[38;2;228;111;174m%12s\033[0m\033[1;37m             Copyright (C) 1996 - " UPX_VERSION_YEAR "\033[0m\n"
 	      "\033[38;2;143;0;255m                           « \033[38;2;255;244;79mmodded by gfunkmonk \033[38;2;143;0;255m»\033[0m\n"
                 "\033[1;30m                 Markus Oberhumer, Laszlo Molnar & John Reiser\033[0m\n\n",
 #if defined(UPX_VERSION_GITREV)
