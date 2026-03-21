@@ -93,14 +93,14 @@ void show_header() {
     fg = con_fg(f, FG_GREEN);
     // clang-format off
     con_fprintf(f,
-                "\033[1;37m                       Ultimate Packer for eXecutables\033[0m\n"
-                "\033[1;37m                          Copyright (C) 1996 - " UPX_VERSION_YEAR "\033[0m\n"
 #if defined(UPX_VERSION_GITREV)
-                "\033[38;2;255;99;71mUPX git-%6.6s%c\033[0m"
+                "\033[38;2;255;99;71mUPX git-%6.6s%c\033[0m\033[1;37m       Ultimate Packer for eXecutables\033[0m\n"
 #else
-                "\033[38;2;255;99;71mUPX\033[38;2;71;227;255m %-11s\033[0m"
+                "\033[38;2;255;99;71mUPX\033[38;2;71;227;255m %-11s\033[0m\033[1;37m        Ultimate Packer for eXecutables\033[0m\n"
 #endif
-                "\033[1;30m Markus Oberhumer, Laszlo Molnar & John Reiser\033[0m  \033[38;2;228;111;174m%14s\033[0m\n\n",
+                "\033[38;2;228;111;174m%13s\033[0m\033[1;37m             Copyright (C) 1996 - " UPX_VERSION_YEAR "\033[0m\n"
+	      "\033[38;2;143;0;255m                           « \033[38;2;255;244;79mmodded by gfunkmonk \033[38;2;143;0;255m»\033[0m\n"
+                "\033[1;30m                 Markus Oberhumer, Laszlo Molnar & John Reiser\033[0m\n\n",
 #if defined(UPX_VERSION_GITREV)
                 gitrev,
                 (sizeof(gitrev)-1 > 6 && gitrev[sizeof(gitrev)-2] == '+') ? '+' : ' ',
