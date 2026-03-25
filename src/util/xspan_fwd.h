@@ -304,41 +304,41 @@ inline void set_le64(const C<T> &a, upx_uint64_t v) {
 #ifndef XSPAN_FWD_C_IS_MEMBUFFER
 template <class T>
 inline C<T> operator+(const C<T> &a, const BE16 &v) {
-    return a + unsigned(v);
+    return a + size_t(unsigned(v));
 }
 template <class T>
 inline C<T> operator+(const C<T> &a, const BE32 &v) {
-    return a + unsigned(v);
+    return a + size_t(unsigned(v));
 }
 template <class T>
 inline C<T> operator+(const C<T> &a, const LE16 &v) {
-    return a + unsigned(v);
+    return a + size_t(unsigned(v));
 }
 template <class T>
 inline C<T> operator+(const C<T> &a, const LE32 &v) {
-    return a + unsigned(v);
+    return a + size_t(unsigned(v));
 }
 
 template <class T>
 inline C<T> operator-(const C<T> &a, const BE16 &v) {
-    return a - unsigned(v);
+    return a - size_t(unsigned(v));
 }
 template <class T>
 inline C<T> operator-(const C<T> &a, const BE32 &v) {
-    return a - unsigned(v);
+    return a - size_t(unsigned(v));
 }
 template <class T>
 inline C<T> operator-(const C<T> &a, const LE16 &v) {
-    return a - unsigned(v);
+    return a - size_t(unsigned(v));
 }
 template <class T>
 inline C<T> operator-(const C<T> &a, const LE32 &v) {
-    return a - unsigned(v);
+    return a - size_t(unsigned(v));
 }
 #endif // XSPAN_FWD_C_IS_MEMBUFFER
 
 template <class T>
-typename std::enable_if<sizeof(T) == 1, upx_rsize_t>::type upx_safe_strlen(const C<T> &a) {
+inline typename std::enable_if<sizeof(T) == 1, upx_rsize_t>::type upx_safe_strlen(const C<T> &a) {
     // not fully checked, but can require at least 1 byte
     upx_rsize_t len = upx_safe_strlen(a.raw_bytes(1));
     (void) a.raw_bytes(len + 1); // now can do a full check

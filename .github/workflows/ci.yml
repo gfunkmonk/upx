@@ -60,8 +60,7 @@ jobs:
         run: |
           git config --global --add safe.directory '*' # needed when running in a container
           git clone --branch "$GITHUB_REF_NAME" --depth 1 "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY" .
-          git submodule update --init -- vendor/lzma-sdk
-          git submodule update --init -- vendor/zstd
+          git submodule update --init -- vendor/lzma-sdk vendor/zstd
           git fsck --strict --progress
       - name: Rebuild and verify stubs
         run: |
@@ -714,9 +713,10 @@ jobs:
           echo -e '#!/bin/sh\n'$log'exec zig ar "$@"' > zig-ar
           echo -e '#!/bin/sh\n'$log'exec zig cc  -target $ZIG_TARGET $ZIG_PIC $ZIG_FLAGS $ZIG_CPPFLAGS $ZIG_CFLAGS   "$@"' > zig-cc
           echo -e '#!/bin/sh\n'$log'exec zig c++ -target $ZIG_TARGET $ZIG_PIC $ZIG_FLAGS $ZIG_CPPFLAGS $ZIG_CXXFLAGS "$@"' > zig-cxx
+          echo -e '#!/bin/sh\n'$log'exec zig objcopy "$@"' > zig-objcopy
           echo -e '#!/bin/sh\n'$log'exec zig ranlib "$@"' > zig-ranlib
-          chmod +x zig-ar zig-cc zig-cxx zig-ranlib
-          ls -la; head zig-ar zig-cc zig-cxx zig-ranlib
+          chmod +x zig-ar zig-cc zig-cxx zig-objcopy zig-ranlib
+          ls -la; head zig-ar zig-cc zig-cxx zig-objcopy zig-ranlib
           # update ZIG_TARGET
           [[ $ZIG_TARGET == mips-linux-musleabi-* ]]     && ZIG_TARGET=mips-linux-musleabi
           [[ $ZIG_TARGET == mips-linux-musleabihf-* ]]   && ZIG_TARGET=mips-linux-musleabihf
