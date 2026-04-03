@@ -700,6 +700,15 @@ void show_sysinfo(const char *options_var) {
 #if defined(UPX_CONFIG_DISABLE_WERROR)
         cf_print("UPX_CONFIG_DISABLE_WERROR", "%lld", UPX_CONFIG_DISABLE_WERROR + 0, 3);
 #endif
+#if defined(DOCTEST_CONFIG_DISABLE)
+        cf_print("DOCTEST_CONFIG_DISABLE", "%lld", DOCTEST_CONFIG_DISABLE + 0, 3);
+#endif
+#if defined(UPX_CONFIG_USE_STABLE_SORT)
+        cf_print("UPX_CONFIG_USE_STABLE_SORT", "%lld", UPX_CONFIG_USE_STABLE_SORT + 0, 3);
+#endif
+#if defined(WITH_XSPAN)
+        cf_print("WITH_XSPAN", "%lld", WITH_XSPAN + 0, 3);
+#endif
 #if defined(WITH_THREADS)
         cf_print("WITH_THREADS", "%lld", WITH_THREADS + 0);
 #endif

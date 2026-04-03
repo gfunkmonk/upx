@@ -467,8 +467,8 @@ public: // raw access
             return 0;
         if __acc_cte (!configRequireBase && base == nullptr)
             return 0;
-        const charptr p_begin = (const charptr) ptr;
-        const charptr p_end = (const charptr) base + size_in_bytes;
+        const charptr p_begin = (const charptr)(const void *) ptr;
+        const charptr p_end = (const charptr)(const void *) base + size_in_bytes;
         return p_end - p_begin;
     }
 
