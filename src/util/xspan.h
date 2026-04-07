@@ -47,6 +47,10 @@
 #ifndef XSPAN_CONFIG_ENABLE_SPAN_CONVERSION
 #define XSPAN_CONFIG_ENABLE_SPAN_CONVERSION 1
 #endif
+// Enable DEBUG.
+#ifndef XSPAN_CONFIG_ENABLE_DEBUG
+#define XSPAN_CONFIG_ENABLE_DEBUG 1
+#endif
 
 // actual implementation
 #include "xspan_impl.h"
@@ -87,14 +91,29 @@ using XSPAN_NAMESPACE_NAME::raw_index_bytes; // overloaded for all classes
 #define XSPAN_S(type) Span<type>
 
 // create a value
+#if XSPAN_CONFIG_ENABLE_DEBUG
+#define XSPAN_0_MAKE(type, first, ...) (XSPAN_0(type)(XSpanDebugFileMake(), (first), ##__VA_ARGS__))
+#define XSPAN_P_MAKE(type, first, ...) (XSPAN_P(type)(XSpanDebugFileMake(), (first), ##__VA_ARGS__))
+#define XSPAN_S_MAKE(type, first, ...) (XSPAN_S(type)(XSpanDebugFileMake(), (first), ##__VA_ARGS__))
+#else
 #define XSPAN_0_MAKE(type, first, ...) (XSPAN_0(type)((first), ##__VA_ARGS__))
 #define XSPAN_P_MAKE(type, first, ...) (XSPAN_P(type)((first), ##__VA_ARGS__))
 #define XSPAN_S_MAKE(type, first, ...) (XSPAN_S(type)((first), ##__VA_ARGS__))
+#endif
 
 // define a variable
+#if XSPAN_CONFIG_ENABLE_DEBUG
+#define XSPAN_0_VAR(type, var, first, ...)                                                         \
+    XSPAN_0(type) var(XSpanDebugFileMake(), (first), ##__VA_ARGS__)
+#define XSPAN_P_VAR(type, var, first, ...)                                                         \
+    XSPAN_P(type) var(XSpanDebugFileMake(), (first), ##__VA_ARGS__)
+#define XSPAN_S_VAR(type, var, first, ...)                                                         \
+    XSPAN_S(type) var(XSpanDebugFileMake(), (first), ##__VA_ARGS__)
+#else
 #define XSPAN_0_VAR(type, var, first, ...) XSPAN_0(type) var((first), ##__VA_ARGS__)
 #define XSPAN_P_VAR(type, var, first, ...) XSPAN_P(type) var((first), ##__VA_ARGS__)
 #define XSPAN_S_VAR(type, var, first, ...) XSPAN_S(type) var((first), ##__VA_ARGS__)
+#endif
 
 // cast to a different type (creates a new value)
 #define XSPAN_TYPE_CAST(type, x) ((x).type_cast<type>())

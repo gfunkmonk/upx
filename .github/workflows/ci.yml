@@ -106,7 +106,8 @@ jobs:
         cppflags:
           - -DWITH_XSPAN=0
           - -DWITH_XSPAN=1
-          - -DWITH_XSPAN=2
+          - -DWITH_XSPAN=2 -DXSPAN_CONFIG_ENABLE_DEBUG=0
+          - -DWITH_XSPAN=2 -DXSPAN_CONFIG_ENABLE_DEBUG=1
           - -DDOCTEST_CONFIG_DISABLE
           - -DUPX_CONFIG_USE_STABLE_SORT
     runs-on: ubuntu-latest
@@ -135,6 +136,8 @@ jobs:
       - run: set -x; $CC --version; $CXX --version
       - run: $CC  -E -x c   -dM /dev/null
       - run: $CXX -E -x c++ -dM /dev/null
+      - run: make build/debug
+      - run: make build/release
       - run: make build/debug+test
       - run: make build/release+test
       - name: Run test suite
@@ -221,7 +224,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { os: ubuntu-22.04, use_extra: true }
+          # { os: ubuntu-22.04, use_extra: true }
+          - { os: ubuntu-22.04 }
           - { os: ubuntu-24.04, use_extra: true, use_wine: true }
     name: ${{ format('{0}', matrix.os) }}
     runs-on: ${{ matrix.os }}
@@ -305,6 +309,7 @@ jobs:
           echo "===== parallel jobs: $jobs"
           DESTDIR="Install with make 2" parallel -kv --lb 'make build/extra/{}+install' ::: $jobs
       - name: Mimic ctest tests SIGSEGV
+        if: ${{ matrix.use_extra }}
         run: |
           jobs="gcc/debug gcc/release clang/debug clang/release"
           test "${{ matrix.use_extra }}" = "true" && jobs="$jobs gcc-m32/debug gcc-m32/release"

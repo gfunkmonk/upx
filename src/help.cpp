@@ -709,6 +709,9 @@ void show_sysinfo(const char *options_var) {
 #if defined(WITH_XSPAN)
         cf_print("WITH_XSPAN", "%lld", WITH_XSPAN + 0, 3);
 #endif
+#if defined(XSPAN_CONFIG_ENABLE_DEBUG)
+        cf_print("XSPAN_CONFIG_ENABLE_DEBUG", "%lld", XSPAN_CONFIG_ENABLE_DEBUG + 0, 3);
+#endif
 #if defined(WITH_THREADS)
         cf_print("WITH_THREADS", "%lld", WITH_THREADS + 0);
 #endif

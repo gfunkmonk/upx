@@ -54,15 +54,28 @@ private:
 public:
     // constructors from pointers
     CSelf(pointer first) : ptr(first), base(nullptr), size_in_bytes(0) { assertInvariants(); }
+    CSelf(XSPAN_DEBUG_ARGS pointer first)
+        : XSPAN_DEBUG_IMPL ptr(first), base(nullptr), size_in_bytes(0) {
+        assertInvariants();
+    }
 
     // constructors
     CSelf(const Self &other)
         : ptr(other.ptr), base(other.base), size_in_bytes(other.size_in_bytes) {
         assertInvariants();
     }
+    CSelf(XSPAN_DEBUG_ARGS const Self &other)
+        : XSPAN_DEBUG_IMPL ptr(other.ptr), base(other.base), size_in_bytes(other.size_in_bytes) {
+        assertInvariants();
+    }
     template <class U>
     CSelf(const CSelf<U> &other, XSPAN_REQUIRES_CONVERTIBLE_A)
         : ptr(other.ptr), base(other.base), size_in_bytes(other.size_in_bytes) {
+        assertInvariants();
+    }
+    template <class U>
+    CSelf(XSPAN_DEBUG_ARGS const CSelf<U> &other, XSPAN_REQUIRES_CONVERTIBLE_A)
+        : XSPAN_DEBUG_IMPL ptr(other.ptr), base(other.base), size_in_bytes(other.size_in_bytes) {
         assertInvariants();
     }
 
@@ -73,8 +86,18 @@ public:
         assertInvariants();
     }
     template <class U>
+    CSelf(XSPAN_DEBUG_ARGS const PtrOrSpan<U> &other, XSPAN_REQUIRES_CONVERTIBLE_A)
+        : XSPAN_DEBUG_IMPL ptr(other.ptr), base(other.base), size_in_bytes(other.size_in_bytes) {
+        assertInvariants();
+    }
+    template <class U>
     CSelf(const Span<U> &other, XSPAN_REQUIRES_CONVERTIBLE_A)
         : ptr(other.ptr), base(other.base), size_in_bytes(other.size_in_bytes) {
+        assertInvariants();
+    }
+    template <class U>
+    CSelf(XSPAN_DEBUG_ARGS const Span<U> &other, XSPAN_REQUIRES_CONVERTIBLE_A)
+        : XSPAN_DEBUG_IMPL ptr(other.ptr), base(other.base), size_in_bytes(other.size_in_bytes) {
         assertInvariants();
     }
 
@@ -92,6 +115,9 @@ public:
 
     // nullptr
     forceinline CSelf(std::nullptr_t) noexcept : ptr(nullptr), base(nullptr), size_in_bytes(0) {}
+    forceinline CSelf(XSPAN_DEBUG_ARGS std::nullptr_t) noexcept : XSPAN_DEBUG_IMPL ptr(nullptr),
+                                                                  base(nullptr),
+                                                                  size_in_bytes(0) {}
     forceinline Self &operator=(std::nullptr_t) noexcept {
         ptr = nullptr;
         return *this;

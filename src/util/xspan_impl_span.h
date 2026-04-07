@@ -54,15 +54,27 @@ private:
 public:
     // constructors from pointers
     CSelf(pointer first) XSPAN_DELETED_FUNCTION;
+    CSelf(XSPAN_DEBUG_ARGS pointer first) XSPAN_DELETED_FUNCTION;
 
     // constructors
     CSelf(const Self &other)
         : ptr(other.ensurePtr()), base(other.ensureBase()), size_in_bytes(other.size_in_bytes) {
         assertInvariants();
     }
+    CSelf(XSPAN_DEBUG_ARGS const Self &other)
+        : XSPAN_DEBUG_IMPL ptr(other.ensurePtr()), base(other.ensureBase()),
+          size_in_bytes(other.size_in_bytes) {
+        assertInvariants();
+    }
     template <class U>
     CSelf(const CSelf<U> &other, XSPAN_REQUIRES_CONVERTIBLE_A)
         : ptr(other.ensurePtr()), base(other.ensureBase()), size_in_bytes(other.size_in_bytes) {
+        assertInvariants();
+    }
+    template <class U>
+    CSelf(XSPAN_DEBUG_ARGS const CSelf<U> &other, XSPAN_REQUIRES_CONVERTIBLE_A)
+        : XSPAN_DEBUG_IMPL ptr(other.ensurePtr()), base(other.ensureBase()),
+          size_in_bytes(other.size_in_bytes) {
         assertInvariants();
     }
 
@@ -74,8 +86,20 @@ public:
         assertInvariants();
     }
     template <class U>
+    CSelf(XSPAN_DEBUG_ARGS const PtrOrSpanOrNull<U> &other, XSPAN_REQUIRES_CONVERTIBLE_A)
+        : XSPAN_DEBUG_IMPL ptr(other.ensurePtr()), base(other.ensureBase()),
+          size_in_bytes(other.size_in_bytes) {
+        assertInvariants();
+    }
+    template <class U>
     CSelf(const PtrOrSpan<U> &other, XSPAN_REQUIRES_CONVERTIBLE_A)
         : ptr(other.ensurePtr()), base(other.ensureBase()), size_in_bytes(other.size_in_bytes) {
+        assertInvariants();
+    }
+    template <class U>
+    CSelf(XSPAN_DEBUG_ARGS const PtrOrSpan<U> &other, XSPAN_REQUIRES_CONVERTIBLE_A)
+        : XSPAN_DEBUG_IMPL ptr(other.ensurePtr()), base(other.ensureBase()),
+          size_in_bytes(other.size_in_bytes) {
         assertInvariants();
     }
 #endif
@@ -85,14 +109,14 @@ public:
     // TODO: use Unchecked to avoid double checks in both constructor and assignment
     template <class U>
     XSPAN_REQUIRES_CONVERTIBLE_R(Self &)
-    operator=(const PtrOrSpan<U> &other) {
+    operator=(const PtrOrSpanOrNull<U> &other) {
         if (other.base == nullptr)
             return assign(Self(other.ptr, size_in_bytes, base));
         return assign(Self(other.ptr, other.size_in_bytes, other.base));
     }
     template <class U>
     XSPAN_REQUIRES_CONVERTIBLE_R(Self &)
-    operator=(const PtrOrSpanOrNull<U> &other) {
+    operator=(const PtrOrSpan<U> &other) {
         if (other.base == nullptr)
             return assign(Self(other.ptr, size_in_bytes, base));
         return assign(Self(other.ptr, other.size_in_bytes, other.base));
@@ -104,6 +128,10 @@ public:
     CSelf(std::nullptr_t, XSpanCount, const void *) XSPAN_DELETED_FUNCTION;
     CSelf(std::nullptr_t, XSpanSizeInBytes, const void *) XSPAN_DELETED_FUNCTION;
     CSelf(std::nullptr_t, size_type, const void *) XSPAN_DELETED_FUNCTION;
+    CSelf(XSPAN_DEBUG_ARGS std::nullptr_t) XSPAN_DELETED_FUNCTION;
+    CSelf(XSPAN_DEBUG_ARGS std::nullptr_t, XSpanCount, const void *) XSPAN_DELETED_FUNCTION;
+    CSelf(XSPAN_DEBUG_ARGS std::nullptr_t, XSpanSizeInBytes, const void *) XSPAN_DELETED_FUNCTION;
+    CSelf(XSPAN_DEBUG_ARGS std::nullptr_t, size_type, const void *) XSPAN_DELETED_FUNCTION;
     Self &operator=(std::nullptr_t) XSPAN_DELETED_FUNCTION;
 #if 0
     // don't enable, this prevents generic usage

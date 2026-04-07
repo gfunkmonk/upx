@@ -2078,9 +2078,11 @@ void PeFile::processResources(Resource *res) {
          usize);
 }
 
-unsigned PeFile::virta2objnum(unsigned addr, SPAN_0(pe_section_t) sect, unsigned objs) {
+/*static*/
+unsigned PeFile::virta2objnum(unsigned addr, SPAN_0(const pe_section_t) sect, unsigned objs) {
     unsigned ic;
     for (ic = 0; ic < objs; ic++) {
+        // if (sect->vaddr >= addr && sect->vaddr + sect->vsize < addr) // ???
         if (sect->vaddr <= addr && sect->vaddr + sect->vsize > addr)
             return ic;
         sect++;
