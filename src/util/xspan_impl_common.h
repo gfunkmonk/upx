@@ -274,13 +274,17 @@ protected:
         return *this;
     }
 #if 0
-Self &assign(ModeUnchecked, const Self &other) {
-    ptr = other.ptr;
-    base = other.base;
-    size_in_bytes = other.size_in_bytes;
-    assertInvariants();
-    return *this;
-}
+    Self &assign(ModeUnchecked, const Self &other) {
+        ptr = other.ptr;
+        base = other.base;
+        size_in_bytes = other.size_in_bytes;
+#if XSPAN_CONFIG_ENABLE_DEBUG && 1
+        if (f.src_file == nullptr)
+            f = other.f;
+#endif
+        assertInvariants();
+        return *this;
+    }
 #endif
 
 public:

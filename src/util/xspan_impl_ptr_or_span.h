@@ -63,7 +63,8 @@ public:
 
     // constructors
     CSelf(const Self &other)
-        : ptr(other.ensurePtr()), base(other.base), size_in_bytes(other.size_in_bytes) {
+        : XSPAN_DEBUG_OTHER ptr(other.ensurePtr()), base(other.base),
+          size_in_bytes(other.size_in_bytes) {
         assertInvariants();
     }
     CSelf(XSPAN_DEBUG_ARGS const Self &other)
@@ -73,7 +74,8 @@ public:
     }
     template <class U>
     CSelf(const CSelf<U> &other, XSPAN_REQUIRES_CONVERTIBLE_A)
-        : ptr(other.ensurePtr()), base(other.base), size_in_bytes(other.size_in_bytes) {
+        : XSPAN_DEBUG_OTHER ptr(other.ensurePtr()), base(other.base),
+          size_in_bytes(other.size_in_bytes) {
         assertInvariants();
     }
     template <class U>
@@ -86,7 +88,8 @@ public:
     // constructors from Span friends
     template <class U>
     CSelf(const Span<U> &other, XSPAN_REQUIRES_CONVERTIBLE_A)
-        : ptr(other.ensurePtr()), base(other.base), size_in_bytes(other.size_in_bytes) {
+        : XSPAN_DEBUG_OTHER ptr(other.ensurePtr()), base(other.base),
+          size_in_bytes(other.size_in_bytes) {
         assertInvariants();
     }
     template <class U>
@@ -98,7 +101,8 @@ public:
 #if XSPAN_CONFIG_ENABLE_SPAN_CONVERSION
     template <class U>
     CSelf(const PtrOrSpanOrNull<U> &other, XSPAN_REQUIRES_CONVERTIBLE_A)
-        : ptr(other.ensurePtr()), base(other.base), size_in_bytes(other.size_in_bytes) {
+        : XSPAN_DEBUG_OTHER ptr(other.ensurePtr()), base(other.base),
+          size_in_bytes(other.size_in_bytes) {
         assertInvariants();
     }
     template <class U>

@@ -524,7 +524,7 @@ void PeFile32::processRelocs() // pass1
         }
         mb_orelocs.alloc(1);
         mb_orelocs.clear();
-        orelocs = mb_orelocs; // => orelocs now is a SPAN_S
+        orelocs = SPAN_S_MAKE(byte, mb_orelocs); // => orelocs now is a SPAN_S
         sorelocs = 0;
         return;
     }
@@ -576,7 +576,7 @@ void PeFile32::processRelocs() // pass1
 
     ibuf.fill(IDADDR(PEDIR_BASERELOC), IDSIZE(PEDIR_BASERELOC), FILLVAL);
     mb_orelocs.alloc(mem_size(4, relocnum, 8192)); // 8192 - safety
-    orelocs = mb_orelocs;                          // => orelocs now is a SPAN_S
+    orelocs = SPAN_S_MAKE(byte, mb_orelocs);       // => orelocs now is a SPAN_S
     sorelocs = optimizeReloc(xcounts[3], (byte *) fix[3], orelocs, ibuf + rvamin, ibufgood - rvamin,
                              32, true, &big_relocs);
 
@@ -627,7 +627,7 @@ void PeFile64::processRelocs() // pass1
         }
         mb_orelocs.alloc(1);
         mb_orelocs.clear();
-        orelocs = mb_orelocs; // => orelocs now is a SPAN_S
+        orelocs = SPAN_S_MAKE(byte, mb_orelocs); // => orelocs now is a SPAN_S
         sorelocs = 0;
         return;
     }
@@ -679,7 +679,7 @@ void PeFile64::processRelocs() // pass1
 
     ibuf.fill(IDADDR(PEDIR_BASERELOC), IDSIZE(PEDIR_BASERELOC), FILLVAL);
     mb_orelocs.alloc(mem_size(4, relocnum, 8192)); // 8192 - safety
-    orelocs = mb_orelocs;                          // => orelocs now is a SPAN_S
+    orelocs = SPAN_S_MAKE(byte, mb_orelocs);       // => orelocs now is a SPAN_S
     sorelocs = optimizeReloc(xcounts[IMAGE_REL_BASED_DIR64], (byte *) fix[IMAGE_REL_BASED_DIR64],
                              orelocs, ibuf + rvamin, ibufgood - rvamin, 64, true, &big_relocs);
 
@@ -1457,7 +1457,7 @@ void PeFile::processTls1(Interval *iv, typename tls_traits<LEXX>::cb_value_t ima
     // the PE loader wants this stuff uncompressed
     mb_otls.alloc(aligned_sotls);
     mb_otls.clear();
-    otls = mb_otls; // => otls now is a SPAN_S
+    otls = SPAN_S_MAKE(byte, mb_otls); // => otls now is a SPAN_S
     const unsigned skip1 = IDADDR(PEDIR_TLS);
     const unsigned take1 = sizeof(tls);
     memcpy(otls, ibuf.subref("bad tls %#x", skip1, take1), take1);
@@ -1973,7 +1973,7 @@ void PeFile::processResources(Resource *res) {
         return; // empty .rsrc Section
     mb_oresources.alloc(soresources);
     mb_oresources.clear();
-    oresources = mb_oresources; // => SPAN_S
+    oresources = SPAN_S_MAKE(byte, mb_oresources); // => SPAN_S
     SPAN_S_VAR(byte, ores, oresources + res->dirsize());
 
     char *keep_icons = nullptr; // icon ids in the first icon group

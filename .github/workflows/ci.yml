@@ -754,6 +754,7 @@ jobs:
           mkdir -p -v ~/.local/bin
           cd ~/.local/bin
           ZIG_DIST_VERSION=${ZIG_DIST_VERSION/#zig-/}
+          ZIG_DIST_VERSION=${ZIG_DIST_VERSION/%.tar.xz/}
           ZIG_DIST_NAME=zig-linux-x86_64-${ZIG_DIST_VERSION}
           ZIG_DIST_NAME=zig-x86_64-linux-${ZIG_DIST_VERSION}
           #curl -sS -L -O https://ziglang.org/builds/${ZIG_DIST_NAME}.tar.xz

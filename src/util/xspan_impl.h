@@ -43,13 +43,15 @@
 XSPAN_NAMESPACE_BEGIN
 
 #if XSPAN_CONFIG_ENABLE_DEBUG
-#define XSPAN_DEBUG_ARGS const XSpanDebugFile &ff,
-#define XSPAN_DEBUG_IMPL f(ff),
-#define XSPAN_DEBUG_PASS ff,
+#define XSPAN_DEBUG_ARGS  const XSpanDebugFile &ff,
+#define XSPAN_DEBUG_IMPL  f(ff),
+#define XSPAN_DEBUG_OTHER f(other.f),
+#define XSPAN_DEBUG_PASS  ff,
 #else
-#define XSPAN_DEBUG_ARGS XSpanDebugFile,
-#define XSPAN_DEBUG_IMPL /*empty*/
-#define XSPAN_DEBUG_PASS /*empty*/
+#define XSPAN_DEBUG_ARGS  XSpanDebugFile,
+#define XSPAN_DEBUG_IMPL  /*empty*/
+#define XSPAN_DEBUG_OTHER /*empty*/
+#define XSPAN_DEBUG_PASS  /*empty*/
 #endif
 
 #if XSPAN_CONFIG_ENABLE_DEBUG
