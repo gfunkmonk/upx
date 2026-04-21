@@ -138,6 +138,7 @@ jobs:
           make UPX_XTARGET=xtarget/${toolchain} xtarget/all
 
       - run: ls -l build/*/*/*/upx* || true
+      - run: ${toolchain}-size build/*/*/*/upx* || true
       - run: file  build/*/*/*/upx* || true
       - name: Make artifact
         run: |

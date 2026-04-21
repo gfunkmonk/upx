@@ -105,40 +105,40 @@ static bool set_eec(int ec, int *eec) {
 
 bool main_set_exit_code(int ec) { return set_eec(ec, &exit_code); }
 
-static noinline void e_exit(int ec) {
+static noreturn void e_exit(int ec) {
     if (opt->debug.getopt_throw_instead_of_exit)
         throw ec;
     (void) main_set_exit_code(ec);
     do_exit();
 }
 
-static noinline void e_usage() {
+static noreturn void e_usage() {
     if (opt->debug.getopt_throw_instead_of_exit)
         throw EXIT_USAGE;
     show_usage();
     e_exit(EXIT_USAGE);
 }
 
-static void e_method(int m, int l) {
+static noreturn void e_method(int m, int l) {
     fflush(con_term);
     fprintf(stderr, "%s: illegal method option -- %d/%d\n", argv0, m, l);
     e_usage();
 }
 
-static void e_optarg(const char *n) {
+static noreturn void e_optarg(const char *n) {
     fflush(con_term);
     fprintf(stderr, "%s: invalid argument in option '%s'\n", argv0, n);
     e_exit(EXIT_USAGE);
 }
 
-static void e_optval(const char *n) {
+static noreturn void e_optval(const char *n) {
     fflush(con_term);
     fprintf(stderr, "%s: invalid value for option '%s'\n", argv0, n);
     e_exit(EXIT_USAGE);
 }
 
 #if defined(OPTIONS_VAR)
-static void e_envopt(const char *n) {
+static noreturn void e_envopt(const char *n) {
     fflush(con_term);
     if (n)
         fprintf(stderr, "%s: invalid string '%s' in environment variable '%s'\n", argv0, n,
@@ -214,7 +214,7 @@ static void check_and_update_options(int i, int argc) {
 // misc
 **************************************************************************/
 
-static void e_help() {
+static noreturn void e_help() {
     show_help(0);
     e_exit(EXIT_USAGE);
 }

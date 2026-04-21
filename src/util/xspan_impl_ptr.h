@@ -125,6 +125,22 @@ public:
         return assign(Self(other));
     }
 
+    // subtraction - ptrdiff_t
+#if 0
+    ptrdiff_t operator-(const Self &other) const {
+        assertInvariants();
+        other.assertInvariants();
+        return ptr - other.ptr;
+    }
+#endif
+    template <class U>
+    XSPAN_REQUIRES_CONVERTIBLE_R(ptrdiff_t)
+    operator-(const CSelf<U> &other) const {
+        assertInvariants();
+        other.assertInvariants();
+        return ptr - other.ptr;
+    }
+
     // cast to a different type (creates a new value)
     template <class U>
     inline CSelf<U> type_cast() const {
@@ -233,7 +249,7 @@ inline typename Ptr<T>::pointer raw_index_bytes(const Ptr<T> &a, size_t index,
                                                 size_t size_in_bytes) {
     typedef typename Ptr<T>::element_type element_type;
     if very_unlikely (a.raw_ptr() == nullptr)
-        throwInternalError("raw_index_bytes unexpected NULL ptr");
+        throwCantPack("raw_index_bytes unexpected NULL ptr");
     return a.raw_bytes(mem_size(sizeof(element_type), index, size_in_bytes)) + index;
 }
 

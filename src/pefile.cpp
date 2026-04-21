@@ -353,7 +353,7 @@ PeFile::Reloc::Reloc(unsigned relocnum) {
 }
 
 void PeFile::Reloc::initSpans() {
-    start_buf = SPAN_0_MAKE(byte, start, start_size_in_bytes); // => now a SPAN_S
+    start_buf = SPAN_S_MAKE(byte, start, start_size_in_bytes); // => now is a SPAN_S
     rb.rel = SPAN_TYPE_CAST(BaseReloc, start_buf);             // SPAN_0
     rb.rel1 = SPAN_TYPE_CAST(LE16, start_buf);                 // SPAN_0
     rb.reset();
@@ -502,8 +502,7 @@ void PeFile::Reloc::finish(byte *(&result_ptr), unsigned &result_size) {
 #endif
 }
 
-void PeFile32::processRelocs() // pass1
-{
+void PeFile32::processRelocs() { // pass1
     big_relocs = 0;
 
     const unsigned skip1 = IDADDR(PEDIR_BASERELOC);
@@ -533,14 +532,14 @@ void PeFile32::processRelocs() // pass1
         if (counts[ic])
             infoWarning("skipping unsupported relocation type %d (%d)", ic, counts[ic]);
 
-    LE32 *fix[4];
+    LE32 *fix[4] = {};
     auto fix_deleter = upx::ArrayDeleter(fix, 0); // don't leak memory
     for (unsigned ic = 0; ic <= IMAGE_REL_BASED_HIGHLOW; ic++) {
         fix[ic] = New(LE32, counts[ic]);
         fix_deleter.count += 1;
     }
 
-    unsigned xcounts[4];
+    unsigned xcounts[4] = {};
     memset(xcounts, 0, sizeof(xcounts));
 
     // prepare sorting
@@ -605,8 +604,7 @@ void PeFile32::processRelocs() // pass1
 }
 
 // FIXME - this is too similar to PeFile32::processRelocs
-void PeFile64::processRelocs() // pass1
-{
+void PeFile64::processRelocs() { // pass1
     big_relocs = 0;
 
     const unsigned skip1 = IDADDR(PEDIR_BASERELOC);
@@ -623,7 +621,13 @@ void PeFile64::processRelocs() // pass1
     if (opt->win32_pe.strip_relocs || relocnum == 0) {
         if (IDSIZE(PEDIR_BASERELOC)) {
             ibuf.fill(IDADDR(PEDIR_BASERELOC), IDSIZE(PEDIR_BASERELOC), FILLVAL);
+            const unsigned old_objs = ih.objects;
             ih.objects = tryremove(IDADDR(PEDIR_BASERELOC), ih.objects);
+            if (old_objs != ih.objects) { // was removed
+                IDADDR(PEDIR_BASERELOC) = 0;
+                IDSIZE(PEDIR_BASERELOC) = 0;
+                ih.imagesize = isection[-1 + ih.objects].vsize + isection[-1 + ih.objects].vaddr;
+            }
         }
         mb_orelocs.alloc(1);
         mb_orelocs.clear();
@@ -636,14 +640,14 @@ void PeFile64::processRelocs() // pass1
         if (ic != IMAGE_REL_BASED_DIR64 && counts[ic])
             infoWarning("skipping unsupported relocation type %d (%d)", ic, counts[ic]);
 
-    LE32 *fix[16];
+    LE32 *fix[16] = {};
     auto fix_deleter = upx::ArrayDeleter(fix, 0); // don't leak memory
     for (unsigned ic = 0; ic < 16; ic++) {
         fix[ic] = New(LE32, counts[ic]);
         fix_deleter.count += 1;
     }
 
-    unsigned xcounts[16];
+    unsigned xcounts[16] = {};
     memset(xcounts, 0, sizeof(xcounts));
 
     // prepare sorting
@@ -1047,7 +1051,12 @@ unsigned PeFile::processImports0(ord_mask_t ord_mask) { // pass 1
 
         soimport += strlen(dlls[ic].name) + 1 + 4;
 
-        for (IPTR_VAR(const LEXX, tarr, dlls[ic].lookupt); *tarr; tarr += 1) {
+        unsigned i_tarr = 0;
+        for (IPTR_VAR(const LEXX, tarr, dlls[ic].lookupt); *tarr; tarr += 1, i_tarr += 1) {
+            if (0xfffdu & (*tarr >> 30)) { // UPX_RSIZE_MAX_MEM but allowing (1<<31)
+                throwCantPack("bad import %s[%#x]:%#llx", dlls[ic].name, i_tarr,
+                              (unsigned long long) *tarr);
+            }
             if (*tarr & ord_mask) {
                 importbyordinal = true;
                 soimport += 2; // ordinal num: 2 bytes
@@ -1065,7 +1074,7 @@ unsigned PeFile::processImports0(ord_mask_t ord_mask) { // pass 1
     }
     mb_oimport.alloc(soimport);
     mb_oimport.clear();
-    oimport = mb_oimport;
+    oimport = SPAN_S_MAKE(byte, mb_oimport); // => now is a SPAN_S
 
     // NOLINTNEXTLINE(bugprone-multi-level-implicit-pointer-conversion)
     upx_qsort(idlls, dllnum, sizeof(idlls[0]), UDll::compare);
@@ -1087,11 +1096,12 @@ unsigned PeFile::processImports0(ord_mask_t ord_mask) { // pass 1
             if (strcasecmp(idlls[ic]->name, "kernel32.dll"))
                 continue;
             if (idlls[ic]->ordinal)
-                for (const LEXX *tarr = idlls[ic]->lookupt; *tarr; tarr++)
+                for (const LEXX *tarr = idlls[ic]->lookupt; *tarr; tarr++) {
                     if (*tarr & ord_mask) {
                         ilinker->add_import(kernelDll(), *tarr & 0xffff);
                         kernel32ordinal = true;
                     }
+                }
         } else if (!ilinker->hasDll(idlls[ic]->name)) {
             if (idlls[ic]->shname && !idlls[ic]->ordinal)
                 ilinker->add_import(idlls[ic]->name, idlls[ic]->shname);
@@ -1111,7 +1121,7 @@ unsigned PeFile::processImports0(ord_mask_t ord_mask) { // pass 1
         set_le32(ppi, ilinker->getAddress(idlls[ic]->name));
         set_le32(ppi + 4, idlls[ic]->iat - rvamin);
         ppi += 8;
-        for (; *tarr; tarr++)
+        for (; *tarr; tarr++) {
             if (*tarr & ord_mask) {
                 const unsigned ord = *tarr & 0xffff;
                 if (idlls[ic]->isk32 && kernel32ordinal) {
@@ -1131,21 +1141,23 @@ unsigned PeFile::processImports0(ord_mask_t ord_mask) { // pass 1
                 ppi += take2;
                 names.add_interval(*tarr, 2 + take2);
             }
+        }
         ppi++;
 
         const unsigned esize = ptr_udiff_bytes(tarr, idlls[ic]->lookupt);
         lookups.add_interval(idlls[ic]->lookupt, esize);
         if (ptr_diff_bytes(ibuf.subref("bad import name %#x", idlls[ic]->iat, 1),
                            idlls[ic]->lookupt) != 0) {
-            memcpy(ibuf.subref("bad import name %#x", idlls[ic]->iat, esize), idlls[ic]->lookupt,
-                   esize);
+            byte *a = ibuf.subref("bad import name %#x %#x", idlls[ic]->iat, esize);
+            // ptr_check_no_overlap(a, esize, idlls[ic]->lookupt, esize);
+            memmove(a, idlls[ic]->lookupt, esize);
             iats.add_interval(idlls[ic]->iat, esize);
         }
         names.add_interval(idlls[ic]->name, strlen(idlls[ic]->name) + 1 + 1);
     }
     ppi += 4;
     assert(ppi < oimport + soimport);
-    soimport = ptr_diff_bytes(ppi, oimport);
+    soimport = ptr_udiff_bytes(ppi, oimport);
 
     if (soimport == 4)
         soimport = 0;
@@ -1318,8 +1330,7 @@ void PeFile::Export::build(char *newbase, unsigned newoffs) {
     assert(exports - newbase == (int) size);
 }
 
-void PeFile::processExports(Export *xport) // pass1
-{
+void PeFile::processExports(Export *xport) { // pass1
     soexport = ALIGN_UP(IDSIZE(PEDIR_EXPORT), 4u);
     if (soexport == 0)
         return;
@@ -1335,8 +1346,7 @@ void PeFile::processExports(Export *xport) // pass1
     oexport = mb_oexport;
 }
 
-void PeFile::processExports(Export *xport, unsigned newoffs) // pass2
-{
+void PeFile::processExports(Export *xport, unsigned newoffs) { // pass2
     if (soexport)
         xport->build((char *) raw_bytes(oexport, 0), newoffs);
 }
@@ -1579,8 +1589,7 @@ void PeFile::processLoadConf(Interval *iv) { // pass 1
 }
 
 void PeFile::processLoadConf(Reloc *rel, const Interval *iv,
-                             unsigned newaddr) // pass2
-{
+                             unsigned newaddr) { // pass2
     // now we have the address of the new load config table
     // so we can create the new relocation entries
     for (unsigned ic = 0; ic < iv->ivnum; ic++) {
@@ -1973,7 +1982,7 @@ void PeFile::processResources(Resource *res) {
         return; // empty .rsrc Section
     mb_oresources.alloc(soresources);
     mb_oresources.clear();
-    oresources = SPAN_S_MAKE(byte, mb_oresources); // => SPAN_S
+    oresources = SPAN_S_MAKE(byte, mb_oresources); // => now is a SPAN_S
     SPAN_S_VAR(byte, ores, oresources + res->dirsize());
 
     char *keep_icons = nullptr; // icon ids in the first icon group
@@ -2794,14 +2803,18 @@ void PeFile::rebuildRelocs(SPAN_S(byte) & extra_info, unsigned bits, unsigned fl
 #if WITH_XSPAN >= 2
     const size_t headway = extra_info.size_bytes();
 #else
-    const size_t headway = 5;
+    // FIXME: last 4 bytes of extra_info are the file offset of extra_info,
+    // so they should be excluded from the count of data bytes.
+    // Something is peculiar unless WITH_XSPAN >= 2.
+    // Also, optional icondir_count is strange following compressed relocs.
+    const size_t headway = 9;
 #endif
     unsigned orig_crelocs = 0;
     byte big = 0;
-    if (headway >= 4) {
+    if (headway >= 8) {
         orig_crelocs = mem_size(1, get_le32(extra_info));
         extra_info += 4;
-        if (headway >= 5) {
+        if (headway >= 9) {
             big = extra_info[0];
             extra_info += 1;
         }

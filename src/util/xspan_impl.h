@@ -118,6 +118,7 @@ ACC_COMPILE_TIME_ASSERT_HEADER(ValueForSizeOf<const char>::value == 1)
 ACC_COMPILE_TIME_ASSERT_HEADER(ValueForSizeOf<void>::value == 1)
 ACC_COMPILE_TIME_ASSERT_HEADER(ValueForSizeOf<const void>::value == 1)
 ACC_COMPILE_TIME_ASSERT_HEADER(ValueForSizeOf<int>::value == 4)
+ACC_COMPILE_TIME_ASSERT_HEADER(ValueForSizeOf<const int>::value == 4)
 
 #ifndef xspan_mem_size_impl
 template <class T>
@@ -180,7 +181,7 @@ struct XSpan_is_convertible : public XSpan_detail::XSpan_ptr_is_convertible<
                                   From, typename XSpan_detail::XSpan_void_to_T<From, To>::type> {};
 #endif
 
-#if DEBUG
+#if DEBUG || 1
 // need extra parenthesis because the C preprocessor does not understand C++ templates
 // char => char
 ACC_COMPILE_TIME_ASSERT_HEADER((XSpan_is_convertible<char, char>::value))
@@ -202,11 +203,36 @@ ACC_COMPILE_TIME_ASSERT_HEADER((!XSpan_is_convertible<void, char>::value))
 ACC_COMPILE_TIME_ASSERT_HEADER((!XSpan_is_convertible<void, const char>::value))
 ACC_COMPILE_TIME_ASSERT_HEADER((!XSpan_is_convertible<const void, const char>::value))
 ACC_COMPILE_TIME_ASSERT_HEADER((!XSpan_is_convertible<const void, char>::value))
+// byte => void
+ACC_COMPILE_TIME_ASSERT_HEADER((XSpan_is_convertible<byte, void>::value))
+ACC_COMPILE_TIME_ASSERT_HEADER((XSpan_is_convertible<byte, const void>::value))
+ACC_COMPILE_TIME_ASSERT_HEADER((XSpan_is_convertible<const byte, const void>::value))
+ACC_COMPILE_TIME_ASSERT_HEADER((!XSpan_is_convertible<const byte, void>::value))
+// void => byte
+ACC_COMPILE_TIME_ASSERT_HEADER((!XSpan_is_convertible<void, byte>::value))
+ACC_COMPILE_TIME_ASSERT_HEADER((!XSpan_is_convertible<void, const byte>::value))
+ACC_COMPILE_TIME_ASSERT_HEADER((!XSpan_is_convertible<const void, const byte>::value))
+ACC_COMPILE_TIME_ASSERT_HEADER((!XSpan_is_convertible<const void, byte>::value))
+// int => void
+ACC_COMPILE_TIME_ASSERT_HEADER((XSpan_is_convertible<int, void>::value))
+ACC_COMPILE_TIME_ASSERT_HEADER((XSpan_is_convertible<int, const void>::value))
+ACC_COMPILE_TIME_ASSERT_HEADER((XSpan_is_convertible<const int, const void>::value))
+ACC_COMPILE_TIME_ASSERT_HEADER((!XSpan_is_convertible<const int, void>::value))
 // char => int
 ACC_COMPILE_TIME_ASSERT_HEADER((!XSpan_is_convertible<char, int>::value))
 ACC_COMPILE_TIME_ASSERT_HEADER((!XSpan_is_convertible<char, const int>::value))
 ACC_COMPILE_TIME_ASSERT_HEADER((!XSpan_is_convertible<const char, const int>::value))
 ACC_COMPILE_TIME_ASSERT_HEADER((!XSpan_is_convertible<const char, int>::value))
+// char => byte
+ACC_COMPILE_TIME_ASSERT_HEADER((!XSpan_is_convertible<char, byte>::value))
+ACC_COMPILE_TIME_ASSERT_HEADER((!XSpan_is_convertible<char, const byte>::value))
+ACC_COMPILE_TIME_ASSERT_HEADER((!XSpan_is_convertible<const char, const byte>::value))
+ACC_COMPILE_TIME_ASSERT_HEADER((!XSpan_is_convertible<const char, byte>::value))
+// byte => char
+ACC_COMPILE_TIME_ASSERT_HEADER((!XSpan_is_convertible<byte, char>::value))
+ACC_COMPILE_TIME_ASSERT_HEADER((!XSpan_is_convertible<byte, const char>::value))
+ACC_COMPILE_TIME_ASSERT_HEADER((!XSpan_is_convertible<const byte, const char>::value))
+ACC_COMPILE_TIME_ASSERT_HEADER((!XSpan_is_convertible<const byte, char>::value))
 #endif
 
 /*************************************************************************

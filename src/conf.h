@@ -121,12 +121,12 @@ static_assert((char) (-1) == 255);             // -funsigned-char
 // multithreading (UPX currently does not use multithreading)
 #if (WITH_THREADS)
 #define upx_thread_local     thread_local
-#define upx_std_atomic(Type) std::atomic<Type>
+#define upx_std_atomic(type) std::atomic<type>
 #define upx_std_once_flag    std::once_flag
 #define upx_std_call_once    std::call_once
 #else
 #define upx_thread_local     /*empty*/
-#define upx_std_atomic(Type) Type
+#define upx_std_atomic(type) type
 #define upx_std_once_flag    upx_std_atomic(size_t)
 template <class NoexceptCallable>
 inline void upx_std_call_once(upx_std_once_flag &flag, NoexceptCallable &&f) noexcept {

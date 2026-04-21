@@ -116,9 +116,13 @@ using XSPAN_NAMESPACE_NAME::raw_index_bytes; // overloaded for all classes
 #endif
 
 // cast to a different type (creates a new value)
+#if __cplusplus >= 201103L
+#define XSPAN_TYPE_CAST(type, x) ((x).template type_cast<type>())
+#else
 #define XSPAN_TYPE_CAST(type, x) ((x).type_cast<type>())
+#endif
 // poison a pointer: point to a non-null invalid address
-#define XSPAN_INVALIDATE(x)      ((x).invalidate())
+#define XSPAN_INVALIDATE(x) ((x).invalidate())
 
 #elif WITH_XSPAN >= 1
 
@@ -140,9 +144,13 @@ using XSPAN_NAMESPACE_NAME::raw_index_bytes; // overloaded for all classes
 #define XSPAN_S_VAR(type, var, first, ...) XSPAN_S(type) var((first))
 
 // cast to a different type (creates a new value)
-#define XSPAN_TYPE_CAST(type, x)           ((x).type_cast<type>())
+#if __cplusplus >= 201103L
+#define XSPAN_TYPE_CAST(type, x) ((x).template type_cast<type>())
+#else
+#define XSPAN_TYPE_CAST(type, x) ((x).type_cast<type>())
+#endif
 // poison a pointer: point to a non-null invalid address
-#define XSPAN_INVALIDATE(x)                ((x).invalidate())
+#define XSPAN_INVALIDATE(x) ((x).invalidate())
 
 #else // WITH_XSPAN
 
@@ -150,15 +158,15 @@ using XSPAN_NAMESPACE_NAME::raw_index_bytes; // overloaded for all classes
 
 // helper for implicit pointer conversions and MemBuffer overloads
 template <class R, class T>
-inline R *xspan_make_helper__(T *first) noexcept {
+forceinline R *xspan_make_helper__(T *first) noexcept {
     return first; // IMPORTANT: no cast here to detect bad usage
 }
 template <class R>
-inline R *xspan_make_helper__(std::nullptr_t /*first*/) noexcept {
+forceinline R *xspan_make_helper__(std::nullptr_t /*first*/) noexcept {
     return nullptr;
 }
 template <class R>
-inline R *xspan_make_helper__(MemBuffer &mb) noexcept {
+forceinline R *xspan_make_helper__(MemBuffer &mb) noexcept {
     return (R *) membuffer_get_void_ptr(mb);
 }
 

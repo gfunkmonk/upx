@@ -8822,6 +8822,8 @@ Elf32_Sym const *PackLinuxElf32::elf_lookup(char const *name) const
 {
     if (hashtab && dynsym && dynstr) {
         unsigned const n_bucket = get_te32(&hashtab[0]);
+        if (file_size_u32 / sizeof(LE32) <= n_bucket)  // coarse but catches fuzz
+            throwCantPack("bad n_bucket %#x", n_bucket);
         unsigned const *const buckets = &hashtab[2];
         unsigned const *const chains = &buckets[n_bucket];
         // Find the end of DT_HASH and DT_DYNSYM. Perhaps elf_find_table_size()
@@ -8863,8 +8865,12 @@ Elf32_Sym const *PackLinuxElf32::elf_lookup(char const *name) const
     }
     if (gashtab && dynsym && dynstr) {
         unsigned const n_bucket = get_te32(&gashtab[0]);
+        if (file_size_u32 / sizeof(LE32) <= n_bucket)  // coarse but catches fuzz
+            throwCantPack("bad n_bucket %#x", n_bucket);
         unsigned const symbias  = get_te32(&gashtab[1]);
         unsigned const n_bitmask = get_te32(&gashtab[2]);
+        if (file_size_u32 / sizeof(LE32) <= n_bitmask)  // coarse but catches fuzz
+            throwCantPack("bad n_bitmask %#x", n_bitmask);
         unsigned const gnu_shift = get_te32(&gashtab[3]);
         unsigned const *const bitmask = &gashtab[4];
         unsigned const *const buckets = &bitmask[n_bitmask];
@@ -8927,6 +8933,8 @@ Elf64_Sym const *PackLinuxElf64::elf_lookup(char const *name) const
 {
     if (hashtab && dynsym && dynstr) {
         unsigned const n_bucket = get_te32(&hashtab[0]);
+        if (file_size_u / sizeof(LE32) <= n_bucket)  // coarse but catches fuzz
+            throwCantPack("bad n_bucket %#x", n_bucket);
         unsigned const *const buckets = &hashtab[2];
         unsigned const *const chains = &buckets[n_bucket];
         // Find the end of DT_HASH and DT_DYNSYM. Perhaps elf_find_table_size()
@@ -8968,8 +8976,12 @@ Elf64_Sym const *PackLinuxElf64::elf_lookup(char const *name) const
     }
     if (gashtab && dynsym && dynstr) {
         unsigned const n_bucket = get_te32(&gashtab[0]);
+        if (file_size_u / sizeof(LE32) <= n_bucket)  // coarse but catches fuzz
+            throwCantPack("bad n_bucket %#x", n_bucket);
         unsigned const symbias  = get_te32(&gashtab[1]);
         unsigned const n_bitmask = get_te32(&gashtab[2]);
+        if (file_size_u / sizeof(LE32) <= n_bitmask)  // coarse but catches fuzz
+            throwCantPack("bad n_bitmask %#x", n_bitmask);
         unsigned const gnu_shift = get_te32(&gashtab[3]);
         upx_uint64_t const *const bitmask = (upx_uint64_t const *)(void const *)&gashtab[4];
         unsigned     const *const buckets = (unsigned const *)&bitmask[n_bitmask];
@@ -8982,8 +8994,9 @@ Elf64_Sym const *PackLinuxElf64::elf_lookup(char const *name) const
             throwCantPack("bad n_bucket %#x\n", n_bucket);
         }
         if (!n_bitmask
-        || (unsigned)(file_size - ((char const *)bitmask - (char const *)(void const *)file_image))
-                <= sizeof(unsigned)*n_bitmask ) {
+        || ((unsigned)(file_size - ((char const *)bitmask
+                - (char const *)(void const *)file_image)))
+            / sizeof(unsigned) <= n_bitmask) {
             throwCantPack("bad n_bitmask %#x\n", n_bitmask);
         }
         if (n_bucket) { // -rust-musl can have "empty" gashtab

@@ -348,6 +348,22 @@ public:
     Self &operator=(MemBuffer &mb) { return assign(Self(mb)); }
 #endif
 
+    // subtraction - ptrdiff_t
+#if 0
+    ptrdiff_t operator-(const Self &other) const {
+        assertInvariants();
+        other.assertInvariants();
+        return ptr - other.ptr;
+    }
+#endif
+    template <class U>
+    XSPAN_REQUIRES_CONVERTIBLE_R(ptrdiff_t)
+    operator-(const CSelf<U> &other) const {
+        assertInvariants();
+        other.assertInvariants();
+        return ptr - other.ptr;
+    }
+
     // subspan (creates a new value)
     Self subspan(ptrdiff_t offset, ptrdiff_t count) const {
         pointer p_begin = check_add(ptr, offset);
@@ -555,7 +571,7 @@ public: // raw access
 
     // like C++20 std::span
     pointer data() const noexcept { return ptr; }
-    pointer data(size_t bytes) const { return raw_bytes(bytes); } // UPX extra
+    pointer data(size_t bytes) const may_throw { return raw_bytes(bytes); } // UPX extra
     size_type size() const { return size_bytes() / sizeof(element_type); }
     size_type size_bytes() const {
         assertInvariants();

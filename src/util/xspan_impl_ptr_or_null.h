@@ -136,7 +136,7 @@ inline typename PtrOrSpanOrNull<T>::pointer raw_index_bytes(const PtrOrSpanOrNul
                                                             size_t index, size_t size_in_bytes) {
     typedef typename PtrOrSpanOrNull<T>::element_type element_type;
     if very_unlikely (a.raw_ptr() == nullptr)
-        throwInternalError("raw_index_bytes unexpected NULL ptr");
+        throwCantPack("raw_index_bytes unexpected NULL ptr");
     return a.raw_bytes(mem_size(sizeof(element_type), index, size_in_bytes)) + index;
 }
 
