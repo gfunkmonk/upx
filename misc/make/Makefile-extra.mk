@@ -223,6 +223,7 @@ build/extra/cross-windows-mingw32/%: export CXX = i686-w64-mingw32-g++ -static -
 build/extra/cross-windows-mingw32/%: CMAKE_SYSTEM_NAME ?= Windows
 build/extra/cross-windows-mingw32/%: CMAKE_SYSTEM_PROCESSOR ?= X86
 build/extra/cross-windows-mingw32/%: CMAKE_CROSSCOMPILING_EMULATOR ?= wine
+build/extra/cross-windows-mingw32/%: export UPX_CONFIG_EXPECT_THREADS ?= OFF
 
 # cross compiler: Windows x64 win64 MinGW (amd64)
 build/extra/cross-windows-mingw64/debug:   PHONY; $(call run_config_and_build,$@,Debug)
@@ -232,6 +233,7 @@ build/extra/cross-windows-mingw64/%: export CXX = x86_64-w64-mingw32-g++ -static
 build/extra/cross-windows-mingw64/%: CMAKE_SYSTEM_NAME ?= Windows
 build/extra/cross-windows-mingw64/%: CMAKE_SYSTEM_PROCESSOR ?= AMD64
 build/extra/cross-windows-mingw64/%: CMAKE_CROSSCOMPILING_EMULATOR ?= wine
+build/extra/cross-windows-mingw64/%: export UPX_CONFIG_EXPECT_THREADS ?= OFF
 
 # cross compiler: macOS arm64 (aarch64)
 build/extra/cross-darwin-arm64/debug:   PHONY; $(call run_config_and_build,$@,Debug)

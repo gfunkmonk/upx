@@ -126,24 +126,17 @@ public:
     }
 
     // subtraction - ptrdiff_t
-#if 0
-    ptrdiff_t operator-(const Self &other) const {
-        assertInvariants();
-        other.assertInvariants();
-        return ptr - other.ptr;
-    }
-#endif
     template <class U>
     XSPAN_REQUIRES_CONVERTIBLE_R(ptrdiff_t)
     operator-(const CSelf<U> &other) const {
         assertInvariants();
         other.assertInvariants();
-        return ptr - other.ptr;
+        return check_ptrdiff(ptr, other.ptr);
     }
 
     // cast to a different type (creates a new value)
     template <class U>
-    inline CSelf<U> type_cast() const {
+    CSelf<U> type_cast() const {
         typedef CSelf<U> R;
         typedef typename R::pointer rpointer;
         return R(upx::ptr_static_cast<rpointer>(ptr));
@@ -217,6 +210,7 @@ private:
     static forceinline pointer check_deref(pointer p) noexcept { return p; }
     static forceinline pointer check_deref(pointer p, ptrdiff_t n) noexcept { return p + n; }
     static forceinline pointer check_add(pointer p, ptrdiff_t n) noexcept { return p + n; }
+    static forceinline ptrdiff_t check_ptrdiff(pointer a, pointer b) noexcept { return a - b; }
 
     // disable taking the address => force passing by reference
     // [I'm not too sure about this design decision, but we can always allow it if needed]

@@ -519,7 +519,13 @@ void PeFile32::processRelocs() { // pass1
     if (opt->win32_pe.strip_relocs || relocnum == 0) {
         if (IDSIZE(PEDIR_BASERELOC)) {
             ibuf.fill(IDADDR(PEDIR_BASERELOC), IDSIZE(PEDIR_BASERELOC), FILLVAL);
+            const unsigned old_objs = ih.objects;
             ih.objects = tryremove(IDADDR(PEDIR_BASERELOC), ih.objects);
+            if (old_objs != ih.objects && 1) { // was removed
+                IDADDR(PEDIR_BASERELOC) = 0;
+                IDSIZE(PEDIR_BASERELOC) = 0;
+                ih.imagesize = isection[-1 + ih.objects].vsize + isection[-1 + ih.objects].vaddr;
+            }
         }
         mb_orelocs.alloc(1);
         mb_orelocs.clear();
@@ -623,7 +629,7 @@ void PeFile64::processRelocs() { // pass1
             ibuf.fill(IDADDR(PEDIR_BASERELOC), IDSIZE(PEDIR_BASERELOC), FILLVAL);
             const unsigned old_objs = ih.objects;
             ih.objects = tryremove(IDADDR(PEDIR_BASERELOC), ih.objects);
-            if (old_objs != ih.objects) { // was removed
+            if (old_objs != ih.objects && 1) { // was removed
                 IDADDR(PEDIR_BASERELOC) = 0;
                 IDSIZE(PEDIR_BASERELOC) = 0;
                 ih.imagesize = isection[-1 + ih.objects].vsize + isection[-1 + ih.objects].vaddr;
@@ -2800,7 +2806,7 @@ void PeFile::rebuildRelocs(SPAN_S(byte) & extra_info, unsigned bits, unsigned fl
 
     // Comments at end of this file say that compressed relocs are optional.
     // Try to detect their presence.  There might be no compressed relocs.
-#if WITH_XSPAN >= 2
+#if WITH_XSPAN >= 2 && 1
     const size_t headway = extra_info.size_bytes();
 #else
     // FIXME: last 4 bytes of extra_info are the file offset of extra_info,

@@ -137,6 +137,11 @@ static noreturn void e_optval(const char *n) {
     e_exit(EXIT_USAGE);
 }
 
+static noreturn void e_help() {
+    show_help(0);
+    e_exit(EXIT_USAGE);
+}
+
 #if defined(OPTIONS_VAR)
 static noreturn void e_envopt(const char *n) {
     fflush(con_term);
@@ -214,11 +219,6 @@ static void check_and_update_options(int i, int argc) {
 // misc
 **************************************************************************/
 
-static noreturn void e_help() {
-    show_help(0);
-    e_exit(EXIT_USAGE);
-}
-
 static void set_term(FILE *f) {
     if (f != nullptr)
         con_term = f;
@@ -284,9 +284,8 @@ static char *prepare_shortopts(char *buf, const char *n, const struct mfx_option
 #endif
 #if 0
         static char vopts[1024];
-        if (v > 0 && v < 1024)
-        {
-            if (vopts[v] && strchr(buf,v) == nullptr)
+        if (v > 0 && v < 1024) {
+            if (vopts[v] && strchr(buf, v) == nullptr)
                 printf("warning: duplicate option %d ('%c')!\n", v, v & 127);
             vopts[v] = 1;
         }
@@ -353,7 +352,7 @@ static int do_option(int optc, const char *arg) {
     switch (optc) {
 #if 0
     // FIXME: to_stdout doesn't work because of console code mess
-    //case 'c':
+    // case 'c':
     case 517:
         opt->to_stdout = true;
         break;

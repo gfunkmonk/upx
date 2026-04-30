@@ -157,6 +157,8 @@ struct PackerNames final {
         names[names_count++] = &e;
         e.fname = pb->getFullName(o);
         e.sname = pb->getName();
+        assert_noexcept(e.fname != nullptr && e.fname[0]);
+        assert_noexcept(e.sname != nullptr && e.sname[0]);
         e.methods_count = e.filters_count = 0;
         for (const int *m = pb->getCompressionMethods(M_ALL, 10); *m != M_END; m++) {
             if (*m >= 0) {

@@ -349,19 +349,12 @@ public:
 #endif
 
     // subtraction - ptrdiff_t
-#if 0
-    ptrdiff_t operator-(const Self &other) const {
-        assertInvariants();
-        other.assertInvariants();
-        return ptr - other.ptr;
-    }
-#endif
     template <class U>
     XSPAN_REQUIRES_CONVERTIBLE_R(ptrdiff_t)
     operator-(const CSelf<U> &other) const {
         assertInvariants();
         other.assertInvariants();
-        return ptr - other.ptr;
+        return check_ptrdiff(ptr, other.ptr);
     }
 
     // subspan (creates a new value)
@@ -387,7 +380,7 @@ public:
 
     // cast to a different type (creates a new value)
     template <class U>
-    inline CSelf<U> type_cast() const {
+    CSelf<U> type_cast() const {
         typedef CSelf<U> R;
         typedef typename R::pointer rpointer;
         R r = R(R::Unchecked, upx::ptr_static_cast<rpointer>(ptr), size_in_bytes,
@@ -546,6 +539,16 @@ private:
             xspan_check_range(p, base, size_in_bytes);
         return p;
     }
+    ptrdiff_t check_ptrdiff(pointer a, pointer b) const may_throw {
+        assertInvariants();
+        if very_unlikely (a == nullptr && b != nullptr)
+            xspan_fail_nullptr();
+        if very_unlikely (a != nullptr && b == nullptr)
+            xspan_fail_nullptr();
+        if (a != nullptr && b != nullptr)
+            (void) ptr_diff_bytes(a, b);
+        return a - b;
+    }
 
     // disable taking the address => force passing by reference
     // [I'm not too sure about this design decision, but we can always allow it if needed]
@@ -579,8 +582,8 @@ public: // raw access
             return 0;
         if __acc_cte (!configRequireBase && base == nullptr)
             return 0;
-        const charptr p_begin = (const charptr)(const void *) ptr;
-        const charptr p_end = (const charptr)(const void *) base + size_in_bytes;
+        const charptr p_begin = upx::ptr_static_cast<const charptr>(ptr);
+        const charptr p_end = upx::ptr_static_cast<const charptr>(base) + size_in_bytes;
         return p_end - p_begin;
     }
 

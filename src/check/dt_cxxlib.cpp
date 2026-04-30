@@ -271,6 +271,24 @@ TEST_CASE("xspan codegen") {
         CHECK((r0 - r1 == -1));
         CHECK((r1 - r0 == 1));
     }
+    {
+        auto r0 = XSPAN_0_MAKE(T, nullptr);
+        auto r1 = XSPAN_0_MAKE(T, nullptr);
+        CHECK(std::is_same_v<decltype(r0 - r1), ptrdiff_t>);
+        CHECK((r0 - r1 == 0));
+    }
+    {
+        auto r0 = XSPAN_0_MAKE(const T, nullptr);
+        auto r1 = XSPAN_0_MAKE(T, nullptr);
+        CHECK(std::is_same_v<decltype(r0 - r1), ptrdiff_t>);
+        CHECK((r0 - r1 == 0));
+    }
+    {
+        auto r0 = XSPAN_0_MAKE(const T, nullptr);
+        auto r1 = XSPAN_0_MAKE(const T, XSPAN_0_MAKE(T, nullptr));
+        CHECK(std::is_same_v<decltype(r0 - r1), ptrdiff_t>);
+        CHECK((r0 - r1 == 0));
+    }
     CHECK(TestXSpanCG<T>::make_span_0_0(buf, sizeof(buf)) == buf);
     CHECK(TestXSpanCG<T>::make_span_p_0(buf, sizeof(buf)) == buf);
     CHECK(TestXSpanCG<T>::make_span_s_0(buf, sizeof(buf)) == buf);

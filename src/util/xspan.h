@@ -121,6 +121,7 @@ using XSPAN_NAMESPACE_NAME::raw_index_bytes; // overloaded for all classes
 #else
 #define XSPAN_TYPE_CAST(type, x) ((x).type_cast<type>())
 #endif
+
 // poison a pointer: point to a non-null invalid address
 #define XSPAN_INVALIDATE(x) ((x).invalidate())
 
@@ -149,6 +150,7 @@ using XSPAN_NAMESPACE_NAME::raw_index_bytes; // overloaded for all classes
 #else
 #define XSPAN_TYPE_CAST(type, x) ((x).type_cast<type>())
 #endif
+
 // poison a pointer: point to a non-null invalid address
 #define XSPAN_INVALIDATE(x) ((x).invalidate())
 
@@ -187,6 +189,7 @@ forceinline R *xspan_make_helper__(MemBuffer &mb) noexcept {
 
 // cast to a different type (creates a new value)
 #define XSPAN_TYPE_CAST(type, x)           (upx::ptr_static_cast<type *>(x))
+
 // poison a pointer: point to a non-null invalid address
 #define XSPAN_INVALIDATE(x)                (ptr_invalidate_and_poison(x))
 
