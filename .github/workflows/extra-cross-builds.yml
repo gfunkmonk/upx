@@ -20,7 +20,8 @@ env:
   ZSTD_CLEVEL: 17
 
 jobs:
-  job-extra-cross-builds:
+  job-extra-cross-builds: # uses cmake + make
+    if: github.repository_owner == 'upx'
     name: Extra Cross Builds
     strategy:
       fail-fast: false
@@ -97,6 +98,7 @@ jobs:
     container: ${{ matrix.container }}
     steps:
       - run: uname -a; pwd; id; umask
+      - run: ulimit -a || true
       - name: ${{ format('Install packages {0}', matrix.container) }}
         run: |
           apt-get update && apt-get upgrade -y
@@ -109,7 +111,7 @@ jobs:
           done
           ls -ldF /etc/alternatives/*mingw* || true
       - run: dpkg -l
-      - name: Check out code
+      - name: ${{ format('Check out {0} source code', github.ref_name) }}
         run: |
           git config --global --add safe.directory '*' # needed when running in a container
           git clone --branch "$GITHUB_REF_NAME" --depth 1 "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY" .
@@ -257,7 +259,7 @@ jobs:
           ls -ld ./build/*/*/*/tmp-upx-testsuite* || true
           rm -rf ./build/*/*/*/tmp-upx-testsuite*
 
-      - name: Install Wine
+      - name: ${{ format('Install Wine {0}', matrix.container) }}
         if: ${{ matrix.wine || matrix.Q_wine }}
         run: |
           dpkg --add-architecture i386
@@ -265,6 +267,7 @@ jobs:
           apt-get install -y wine wine32:i386 wine64
           ls -ldF /usr/bin/wine* /etc/alternatives/*wine* || true
           mkdir -p -v ~/.wine && wineboot --init
+      - run: dpkg -l
 
       - name: ${{ format('Run ctest tests with Wine {0}', matrix.wine) }}
         if: ${{ matrix.wine }}

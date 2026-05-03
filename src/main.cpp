@@ -165,7 +165,7 @@ static void check_not_both(bool e1, bool e2, const char *c1, const char *c2) {
     }
 }
 
-static void check_and_update_options(int i, int argc) {
+static noinline void check_and_update_options(int i, int argc) {
     assert(i <= argc);
 
     if (opt->cmd != CMD_COMPRESS) {
@@ -348,7 +348,7 @@ static int getoptvar(upx::OptVar<T, default_value, min_value, max_value> *var,
     return r;
 }
 
-static int do_option(int optc, const char *arg) {
+static noinline int do_option(int optc, const char *arg) {
     switch (optc) {
 #if 0
     // FIXME: to_stdout doesn't work because of console code mess
@@ -1117,6 +1117,7 @@ void main_get_envoptions() {
     assert_noexcept(env != nullptr);
     if (env == nullptr)
         return;
+    const auto env_deleter = upx::MallocDeleter(&env, 1); // don't leak memory
 
     /* count arguments */
     for (p = env, targc = 1;;) {
@@ -1133,12 +1134,13 @@ void main_get_envoptions() {
     }
 
     /* alloc temp argv */
-    if (targc > 1)
+    if (targc > 1) {
         targv = (const char **) upx_calloc(targc + 1, sizeof(char *));
-    if (targv == nullptr) {
-        ::free(env);
-        return;
+        assert_noexcept(targv != nullptr);
     }
+    if (targv == nullptr)
+        return;
+    const auto targv_deleter = upx::MallocDeleter(&targv, 1); // don't leak memory
 
     /* fill temp argv */
     targv[0] = argv0;
@@ -1173,14 +1175,10 @@ void main_get_envoptions() {
 
     if (mfx_optind < targc)
         e_envopt(targv[mfx_optind]);
-
-    /* clean up */
-    ::free(targv); // NOLINT(bugprone-multi-level-implicit-pointer-conversion)
-    ::free(env);
 #endif /* defined(OPTIONS_VAR) */
 }
 
-static void first_options(int argc, char **argv) {
+static noinline void first_options(int argc, char **argv) {
     int i;
     int n = argc;
 

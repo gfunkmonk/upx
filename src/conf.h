@@ -456,6 +456,7 @@ inline void mem_clear(T *object) noexcept {
     static_assert(std::is_trivially_copyable_v<T>);
     constexpr size_t size = sizeof(*object);
     static_assert(size >= 1 && size <= UPX_RSIZE_MAX_MEM);
+    // NOLINTNEXTLINE(bugprone-multi-level-implicit-pointer-conversion)
     memset((void *) object, 0, size);
 }
 // disable some overloads
@@ -827,9 +828,9 @@ unsigned membuffer_get_size_in_bytes(const MemBuffer &mb) noexcept;
 
 // main.cpp
 extern const char *progname;
-bool main_set_exit_code(int ec);
-int main_get_options(int argc, char **argv);
-void main_get_envoptions();
+noinline bool main_set_exit_code(int ec);
+noinline int main_get_options(int argc, char **argv);
+noinline void main_get_envoptions();
 noinline int upx_main(int argc, char *argv[]) may_throw;
 
 // msg.cpp

@@ -71,31 +71,40 @@ jobs:
             llvm_version: 22.1.4
             use_arm64ec: true
             url: 'https://github.com/mstorsjo/llvm-mingw/releases/download/20260421/llvm-mingw-20260421-ucrt-ubuntu-22.04-x86_64.tar.xz'
-    name: ${{ format('{0} {1}', matrix.name, matrix.llvm_version) }}
-    runs-on: ubuntu-latest
-    #container: 'ubuntu:22.04'
-    container: 'ubuntu:26.04'
+
     env:
+      container: 'ubuntu:26.04'
       CMAKE_SYSTEM_NAME: Windows
       xflags: -D_WIN32_WINNT=0x0601
       #xflags: -D_WIN32_WINNT=0x0601 -DDOCTEST_CONFIG_DISABLE
+
+    name: ${{ format('{0} {1}', matrix.name, matrix.llvm_version) }}
+    runs-on: ubuntu-latest
+    #container: ${{ env.container }}
+    container: 'ubuntu:26.04'
     steps:
       - run: uname -a; pwd; id; umask
       - run: ulimit -a || true
-      - name: Install packages
+      - name: ${{ format('Install packages {0}', env.container) }}
         run: |
           dpkg --add-architecture i386
           apt-get update && apt-get upgrade -y
-          apt-get install -y --no-install-recommends bash ca-certificates cmake curl file git make parallel strace tar time util-linux wine wine32:i386 wine64 xz-utils zstd
-          git config --global --add safe.directory '*' # needed when running in a container
+          apt-get install -y --no-install-recommends bash ca-certificates cmake curl file git make parallel strace tar time tree util-linux xz-utils zstd
+      - run: dpkg -l
+      - name: ${{ format('Install Wine {0}', env.container) }}
+        run: |
+          apt-get install -y wine wine32:i386 wine64
           ls -ldF /usr/bin/wine* /etc/alternatives/*wine* || true
-          mkdir -p -v ~/.wine
-          wineboot --init
-      - name: 'Check out code'
-        uses: actions/checkout@v6
-        with: { submodules: true }
+          mkdir -p -v ~/.wine && wineboot --init
+      - run: dpkg -l
+      - name: ${{ format('Check out {0} source code', github.ref_name) }}
+        run: |
+          git config --global --add safe.directory '*' # needed when running in a container
+          git clone --branch "$GITHUB_REF_NAME" --depth 1 "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY" .
+          git submodule update --init
       - name: Check out test suite
         run: git clone --depth=1 https://github.com/upx/upx-testsuite ../deps/upx-testsuite
+
       - name: ${{ format('Install {0} {1}', matrix.name, matrix.llvm_version) }}
         run: |
           mkdir -p -v ~/.local/bin
@@ -170,10 +179,7 @@ jobs:
 
       - name: 'Make artifact'
         run: |
-          ls -l build/*/*/*/upx.exe
-          file  build/*/*/*/upx.exe || true
-          size  build/*/*/*/upx.exe || true
-          N=$(echo "upx-${GITHUB_REF_NAME}-${GITHUB_SHA:0:7}-weekly-ci-${{ matrix.name }}-${{ matrix.llvm_version }}" | sed 's/[^0-9a-zA-Z_.-]/-/g')
+          N=$(echo "upx-${GITHUB_REF_NAME}-${GITHUB_SHA:0:7}-weekly-ci-${{ matrix.name }}-${{ matrix.llvm_version }}" | sed 's/[^0-9a-zA-Z_.+-]/-/g')
           mkdir -p "tmp/artifact/$N"
           for f in build/*/*/*/upx.exe; do
             d="${f%/*}" # dirname
@@ -208,7 +214,7 @@ jobs:
       - name: 'Run test suite under Wine'
         #if: false
         run: |
-          export upx_exe_runner=wine
+          export upx_exe_runner="wine"
           export upx_exe=./upx.exe
           export upx_testsuite_SRCDIR="$(readlink -en ../deps/upx-testsuite)"
           jobs="i686-w64-mingw32-clang-static/debug i686-w64-mingw32-clang-static/release"
