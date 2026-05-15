@@ -764,7 +764,7 @@ void Packer::initLoader(unsigned arch, const void *pdata, int plen, int small, i
     linker->init(arch, pdata, plen, pextra);
 
     unsigned size;
-    char const *const ident = getIdentstr(&size, small);
+    const char *const ident = getIdentstr(&size, small);
     linker->addSection("IDENTSTR", ident, size, 0);
 }
 

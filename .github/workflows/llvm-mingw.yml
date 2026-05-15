@@ -12,7 +12,10 @@ env:
   CMAKE_VERBOSE_MAKEFILE: 'ON'
   CTEST_OUTPUT_ON_FAILURE: 'ON'
   DEBIAN_FRONTEND: noninteractive
+  NO_COLOR: 1
+  UPX_CMAKE_BUILD_FLAGS: --verbose
   UPX_CMAKE_CONFIG_FLAGS: -Wdev --warn-uninitialized
+  UPX_CONFIG_HAVE_WORKING_BUILD_RPATH: 'ON'
   #UPX_DEBUG_DOCTEST_DISABLE: 1
   UPX_DEBUG_TEST_FLOAT_DIVISION_BY_ZERO: 1
   UPX_DEBUG_TEST_LIBC_QSORT: 1
@@ -63,14 +66,14 @@ jobs:
             llvm_version: 21.1.8
             use_arm64ec: true
             url: 'https://github.com/mstorsjo/llvm-mingw/releases/download/20251216/llvm-mingw-20251216-ucrt-ubuntu-22.04-x86_64.tar.xz'
-          - name: llvm-mingw-20260421-msvcrt
-            llvm_version: 22.1.4
+          - name: llvm-mingw-20260505-msvcrt
+            llvm_version: 22.1.5
             use_arm64ec: true
-            url: 'https://github.com/mstorsjo/llvm-mingw/releases/download/20260421/llvm-mingw-20260421-msvcrt-ubuntu-22.04-x86_64.tar.xz'
-          - name: llvm-mingw-20260421-ucrt
-            llvm_version: 22.1.4
+            url: 'https://github.com/mstorsjo/llvm-mingw/releases/download/20260505/llvm-mingw-20260505-msvcrt-ubuntu-22.04-x86_64.tar.xz'
+          - name: llvm-mingw-20260505-ucrt
+            llvm_version: 22.1.5
             use_arm64ec: true
-            url: 'https://github.com/mstorsjo/llvm-mingw/releases/download/20260421/llvm-mingw-20260421-ucrt-ubuntu-22.04-x86_64.tar.xz'
+            url: 'https://github.com/mstorsjo/llvm-mingw/releases/download/20260505/llvm-mingw-20260505-ucrt-ubuntu-22.04-x86_64.tar.xz'
 
     env:
       container: 'ubuntu:26.04'
@@ -89,13 +92,7 @@ jobs:
         run: |
           dpkg --add-architecture i386
           apt-get update && apt-get upgrade -y
-          apt-get install -y --no-install-recommends bash ca-certificates cmake curl file git make parallel strace tar time tree util-linux xz-utils zstd
-      - run: dpkg -l
-      - name: ${{ format('Install Wine {0}', env.container) }}
-        run: |
-          apt-get install -y wine wine32:i386 wine64
-          ls -ldF /usr/bin/wine* /etc/alternatives/*wine* || true
-          mkdir -p -v ~/.wine && wineboot --init
+          apt-get install -y --no-install-recommends bash ca-certificates cmake curl file git make ninja-build parallel strace tar time tree util-linux xz-utils zstd
       - run: dpkg -l
       - name: ${{ format('Check out {0} source code', github.ref_name) }}
         run: |
@@ -116,7 +113,11 @@ jobs:
           # update PATH
           cd ./llvm-mingw*/bin
           echo "PATH=$PWD:$PATH" >> $GITHUB_ENV
-          ls -laF
+          echo "$PWD"; ls -laF
+
+      - run: cd ~/.local/bin/llvm-mingw*/. && echo "$PWD" && ls -laF
+      - run: cd ~/.local/bin/llvm-mingw*/. && echo "$PWD" && tree -sF -d --du
+      # run: cd ~/.local/bin/llvm-mingw*/. && echo "$PWD" && tree -sF    --du
 
       - name: 'Build clang aarch64'
         run: |
@@ -199,6 +200,13 @@ jobs:
         uses: actions/upload-artifact@v6
         with: { name: '${{ env.artifact_name }}', path: tmp/artifact }
 
+      - name: ${{ format('Install Wine {0}', env.container) }}
+        run: |
+          apt-get install -y wine wine32:i386 wine64
+          ls -ldF /usr/bin/wine* /etc/alternatives/*wine* || true
+          mkdir -p -v ~/.wine && wineboot --init
+      - run: dpkg -l
+
       - name: 'Run ctest tests i686 static with Wine'
         run: |
           make UPX_XTARGET=llvm-mingw/i686-w64-mingw32-clang-static xtarget/all+test
@@ -210,13 +218,13 @@ jobs:
           ls -ld ./build/*/*/*/XTesting/*/* || true
           rm -rf ./build/*/*/*/XTesting/*/*
 
-      - run: ulimit -a || true
       - name: 'Run test suite under Wine'
         #if: false
         run: |
           export upx_exe_runner="wine"
           export upx_exe=./upx.exe
           export upx_testsuite_SRCDIR="$(readlink -en ../deps/upx-testsuite)"
+          export UPX_DEBUG_DOCTEST_DISABLE=1
           jobs="i686-w64-mingw32-clang-static/debug i686-w64-mingw32-clang-static/release"
           jobs="$jobs x86_64-w64-mingw32-clang-static/debug x86_64-w64-mingw32-clang-static/release"
           echo "===== parallel jobs: $jobs"

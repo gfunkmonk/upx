@@ -693,6 +693,7 @@ void show_sysinfo(const char *options_var) {
 #if defined(__SIZEOF_LONG_LONG__) && (__SIZEOF_LONG_LONG__ + 0 > 8)
         cf_print("__SIZEOF_LONG_LONG__", "%lld", __SIZEOF_LONG_LONG__ + 0, 3);
 #endif
+        cf_print("__SIZEOF_POINTER__", "%lld", (long long) sizeof(void *), 3);
 #if defined(__SIZEOF_POINTER__) && (__SIZEOF_POINTER__ + 0 > 8)
         cf_print("__SIZEOF_POINTER__", "%lld", __SIZEOF_POINTER__ + 0, 3);
 #endif

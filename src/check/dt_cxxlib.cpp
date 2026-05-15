@@ -523,16 +523,19 @@ static_assert(upx::is_bounded_array_v<const volatile int[1l]>);
 static_assert(upx::is_same_all_v<int>);
 static_assert(upx::is_same_all_v<int, int>);
 static_assert(upx::is_same_all_v<int, int, int>);
-static_assert(!upx::is_same_all_v<int, char>);
-static_assert(!upx::is_same_all_v<int, char, int>);
 static_assert(!upx::is_same_all_v<int, int, char>);
+static_assert(!upx::is_same_all_v<int, char>);
+static_assert(!upx::is_same_all_v<int, char, char>);
+static_assert(!upx::is_same_all_v<int, char, int>);
+static_assert(!upx::is_same_all_v<int, char, long>);
 
 static_assert(!upx::is_same_any_v<int>);
 static_assert(upx::is_same_any_v<int, int>);
-static_assert(upx::is_same_any_v<int, char, int>);
+static_assert(upx::is_same_any_v<int, int, int>);
 static_assert(upx::is_same_any_v<int, int, char>);
 static_assert(!upx::is_same_any_v<int, char>);
 static_assert(!upx::is_same_any_v<int, char, char>);
+static_assert(upx::is_same_any_v<int, char, int>);
 static_assert(!upx::is_same_any_v<int, char, long>);
 
 static_assert(upx::is_same_any_v<ptrdiff_t, int, long, long long>);
