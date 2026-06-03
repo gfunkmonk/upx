@@ -304,12 +304,12 @@ if(Threads_FOUND)
     endforeach()
 endif()
 
+if(NOT UPX_CONFIG_DISABLE_BZIP2)
 upx_add_glob_files(bzip2_SOURCES "vendor/bzip2/*.c")
 add_library(upx_vendor_bzip2 STATIC ${bzip2_SOURCES})
 if(NOT UPX_CONFIG_DISABLE_C_STANDARD)
     set_property(TARGET upx_vendor_bzip2 PROPERTY C_STANDARD 11)
 endif()
-if(NOT UPX_CONFIG_DISABLE_BZIP2)
 endif() # UPX_CONFIG_DISABLE_BZIP2
 
 upx_add_glob_files(ucl_SOURCES "vendor/ucl/src/*.c")
@@ -324,12 +324,12 @@ if(NOT UPX_CONFIG_DISABLE_C_STANDARD)
     set_property(TARGET upx_vendor_zlib PROPERTY C_STANDARD 11)
 endif()
 
+if(NOT UPX_CONFIG_DISABLE_ZSTD)
 upx_add_glob_files(zstd_SOURCES "vendor/zstd/lib/*/*.c")
 add_library(upx_vendor_zstd STATIC ${zstd_SOURCES})
 if(NOT UPX_CONFIG_DISABLE_C_STANDARD)
     set_property(TARGET upx_vendor_zstd PROPERTY C_STANDARD 11)
 endif()
-if(NOT UPX_CONFIG_DISABLE_ZSTD)
 endif() # UPX_CONFIG_DISABLE_ZSTD
 
 upx_add_glob_files(upx_SOURCES "src/*.cpp" "src/[cfu]*/*.cpp")
@@ -354,6 +354,7 @@ endif()
 
 upx_cmake_include_hook(5_target_compilation_flags)
 
+if(NOT UPX_CONFIG_DISABLE_BZIP2)
 set(t upx_vendor_bzip2)
 upx_compile_target_debug_with_O2(${t})
 upx_sanitize_target(${t})
@@ -364,7 +365,6 @@ elseif(GNU_FRONTEND)
     target_compile_options(${t} PRIVATE ${warn_Wall} ${warn_Werror})
 endif()
 upx_add_target_extra_compile_options(${t} UPX_CONFIG_EXTRA_COMPILE_OPTIONS_BZIP2)
-if(NOT UPX_CONFIG_DISABLE_BZIP2)
 endif() # UPX_CONFIG_DISABLE_BZIP2
 
 set(t upx_vendor_ucl)
@@ -393,6 +393,7 @@ elseif(GNU_FRONTEND)
 endif()
 upx_add_target_extra_compile_options(${t} UPX_CONFIG_EXTRA_COMPILE_OPTIONS_ZLIB)
 
+if(NOT UPX_CONFIG_DISABLE_ZSTD)
 set(t upx_vendor_zstd)
 upx_compile_target_debug_with_O2(${t})
 upx_sanitize_target(${t})
@@ -403,7 +404,6 @@ elseif(GNU_FRONTEND)
     target_compile_options(${t} PRIVATE ${warn_Wall} ${warn_Werror})
 endif()
 upx_add_target_extra_compile_options(${t} UPX_CONFIG_EXTRA_COMPILE_OPTIONS_ZSTD)
-if(NOT UPX_CONFIG_DISABLE_ZSTD)
 endif() # UPX_CONFIG_DISABLE_ZSTD
 
 set(t upx)

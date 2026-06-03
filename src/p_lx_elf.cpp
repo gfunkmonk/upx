@@ -368,10 +368,12 @@ PackLinuxElf32::PackLinuxElf32help1(InputFile *f)
         if (3& ((upx_uintptr_t)dynsym | (upx_uintptr_t)gashtab | (upx_uintptr_t)hashtab)) {
             throwCantPack("unaligned DT_SYMTAB, DT_GNU_HASH, or DT_HASH/n");
         }
-        jni_onload_sym = elf_lookup("JNI_OnLoad");
-        if (jni_onload_sym) {
-            jni_onload_va = get_te32(&jni_onload_sym->st_value);
-            jni_onload_va = 0;  // FIXME not understood; need example
+        if (opt->cmd == CMD_COMPRESS) {
+            jni_onload_sym = elf_lookup("JNI_OnLoad");
+            if (jni_onload_sym) {
+                jni_onload_va = get_te32(&jni_onload_sym->st_value);
+                jni_onload_va = 0;  // FIXME not understood; need example
+            }
         }
     }
 }
@@ -1184,10 +1186,12 @@ PackLinuxElf64::PackLinuxElf64help1(InputFile *f)
         if (3& ((upx_uintptr_t)dynsym | (upx_uintptr_t)gashtab | (upx_uintptr_t)hashtab)) {
             throwCantPack("unaligned DT_SYMTAB, DT_GNU_HASH, or DT_HASH/n");
         }
-        jni_onload_sym = elf_lookup("JNI_OnLoad");
-        if (jni_onload_sym) {
-            jni_onload_va = get_te64(&jni_onload_sym->st_value);
-            jni_onload_va = 0;  // FIXME not understood; need example
+        if (opt->cmd == CMD_COMPRESS) {
+            jni_onload_sym = elf_lookup("JNI_OnLoad");
+            if (jni_onload_sym) {
+                jni_onload_va = get_te64(&jni_onload_sym->st_value);
+                jni_onload_va = 0;  // FIXME not understood; need example
+            }
         }
     }
 }

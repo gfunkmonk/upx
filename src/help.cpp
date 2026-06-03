@@ -697,6 +697,7 @@ void show_sysinfo(const char *options_var) {
 #if defined(__SIZEOF_POINTER__) && (__SIZEOF_POINTER__ + 0 > 8)
         cf_print("__SIZEOF_POINTER__", "%lld", __SIZEOF_POINTER__ + 0, 3);
 #endif
+        cf_print("__SIZEOF_SIZE_T__", "%lld", (long long) sizeof(size_t), 3);
 #if defined(UPX_CONFIG_DISABLE_WSTRICT)
         cf_print("UPX_CONFIG_DISABLE_WSTRICT", "%lld", UPX_CONFIG_DISABLE_WSTRICT + 0, 3);
 #endif

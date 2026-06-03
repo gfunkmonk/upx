@@ -3,6 +3,7 @@ User visible changes for UPX
 ==================================================================
 
 Changes in 5.1.2 (XX XXX XXXX):
+  * new format cpm86/cmd
   * bug fixes - see https://github.com/upx/upx/milestone/23
 
 Changes in 5.1.1 (05 Mar 2026):

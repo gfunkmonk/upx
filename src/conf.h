@@ -476,8 +476,11 @@ inline void mem_clear(T (&array)[N]) noexcept DELETED_FUNCTION;
 #define ByteArray(var, n) Array(byte, var, (n))
 
 // assert_noexcept()
+noinline void assertFailed(int e, const char *expr, const char *file, int line,
+                           const char *func) noexcept;
 noreturn void assertFailed(const char *expr, const char *file, int line, const char *func) noexcept;
-noreturn void throwAssertFailed(const char *expr, const char *file, int line, const char *func);
+noreturn void throwAssertFailed(const char *expr, const char *file, int line, const char *func)
+    may_throw;
 #if defined(__clang__) || defined(__GNUC__)
 #undef assert
 #if DEBUG || 0
@@ -491,8 +494,10 @@ noreturn void throwAssertFailed(const char *expr, const char *file, int line, co
 #endif
 #define assert_noexcept(e)                                                                         \
     ((void) (__acc_cte(e) || (assertFailed(#e, __FILE__, __LINE__, __func__), 0)))
+#define assert_noexcept2(e) assertFailed(e, #e, __FILE__, __LINE__, __func__)
 #else
-#define assert_noexcept assert
+#define assert_noexcept  assert
+#define assert_noexcept2 assert
 #endif
 
 //
@@ -588,6 +593,7 @@ using upx::tribool;
 #define UPX_F_W64PE_ARM64         43 // NOT YET IMPLEMENTED
 #define UPX_F_W64PE_ARM64EC       44 // NOT YET IMPLEMENTED
 #define UPX_F_LINUX_ELF64_RISCV64 45
+#define UPX_F_CPM86_CMD           46 // CP/M-86 .cmd
 
 #define UPX_F_ATARI_TOS         129
 // #define UPX_F_SOLARIS_SPARC     130 // NOT IMPLEMENTED

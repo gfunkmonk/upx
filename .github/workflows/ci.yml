@@ -30,8 +30,6 @@ jobs:
     name: Rebuild stubs
     runs-on: ubuntu-latest
     container: ubuntu:24.04 # provides glibc-2.39
-    #container: debian:12-slim # also works; provides glibc-2.36
-    #container: debian:testing-slim # also works; currently provides glibc-2.38
     steps:
       - run: uname -a; pwd; id; umask
       - name: Install packages
@@ -132,6 +130,10 @@ jobs:
             gcc)   CC="gcc $xflags";   CXX="g++ $xflags" ;;
             *)     exit 99 ;;
           esac
+          if [[ "${{ matrix.container }}" == *'alpine:3.23' ]]; then true;
+            export CXX="$CXX -std=gnu++23"
+            echo "UPX_CONFIG_DISABLE_CXX_STANDARD=ON" >> $GITHUB_ENV
+          fi
           echo -e "CC=$CC\nCXX=$CXX" >> $GITHUB_ENV
       - run: set -x; $CC --version; $CXX --version
       - run: $CC  -E -x c   -dM /dev/null | LC_ALL=C sort
@@ -181,7 +183,9 @@ jobs:
       - run: gcc     -E -x c   -dM /dev/null | LC_ALL=C sort # list predefined macros for C
       - run: g++     -E -x c++ -dM /dev/null | LC_ALL=C sort # list predefined macros for C++
       - run: make build/extra/clang/all
+      - run: make build/extra/clang-std-cxx20/all
       - run: make build/extra/gcc/all
+      - run: make build/extra/gcc-std-cxx20/all
       - run: ls -l build/*/*/*/upx* || true
       - run: size  build/*/*/*/upx* || true
       - run: file  build/*/*/*/upx* || true
@@ -249,13 +253,16 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - run: uname -a; pwd; id; umask
-      - name: Install extra 32-bit and MinGW packages
+      - name: ${{ format('Install extra 32-bit and MinGW packages {0}', matrix.os) }}
         if: ${{ matrix.use_extra }}
         run: |
           sudo dpkg --add-architecture i386
           sudo apt-get update && sudo apt-get upgrade -y
           sudo apt-get install -y dmidecode gdb libc6-dbg:i386 parallel strace valgrind
           sudo apt-get install -y g++-multilib g++-mingw-w64-i686 g++-mingw-w64-x86-64
+      - name: ${{ format('Install MinGW posix-threads {0}', matrix.os) }}
+        if: ${{ matrix.use_extra }}
+        run: |
           # make sure that we use posix-threads (pthread/winpthreads) and NOT win32-threads
           ls -ldF /etc/alternatives/*mingw* || true
           for f in i686-w64-mingw32-g++ i686-w64-mingw32-gcc x86_64-w64-mingw32-g++ x86_64-w64-mingw32-gcc; do
@@ -269,7 +276,7 @@ jobs:
         if: ${{ matrix.use_extra }}
       - run: sudo dmidecode || true
         if: ${{ matrix.use_extra }}
-      - name: Install Wine
+      - name: ${{ format('Install Wine {0}', matrix.os) }}
         if: ${{ matrix.use_extra && matrix.use_wine }}
         run: |
           sudo apt-get install -y wine wine32:i386 wine64
@@ -553,6 +560,8 @@ jobs:
           else
             exit 1
           fi
+      - run: echo "CXXFLAGS=$CXXFLAGS -DDOCTEST_CONFIG_DISABLE" >> $GITHUB_ENV
+        if: ${{ contains(matrix.name, 'windows-2026') }}
       - run: make build/debug
       - run: make build/release
       - run: shopt -s globstar; ls -ld build/**/upx.exe || true
@@ -666,6 +675,7 @@ jobs:
           cat .GITREV.txt
           set /p GITREV=<.GITREV.txt
           set UPX_DEFS=-DUPX_CONFIG_DISABLE_WSTRICT=0 -DUPX_CONFIG_DISABLE_WERROR=0 -DWITH_THREADS=0 -DWITH_BZIP2=0 -DWITH_ZSTD=0
+          set UPX_DEFS=%UPX_DEFS% -DDOCTEST_CONFIG_DISABLE
           set UPX_LIBS=%BDIR%\ucl\ucl.lib %BDIR%\zlib\zlib.lib
           @rem set UPX_LIBS=%BDIR%\bzip2\bzip2.lib %BDIR%\ucl\ucl.lib %BDIR%\zlib\zlib.lib %BDIR%\zstd\zstd.lib
           set sources=%s%\*.cpp %s%\check\*.cpp %s%\compress\*.cpp %s%\console\*.cpp %s%\filter\*.cpp %s%\util\*.cpp

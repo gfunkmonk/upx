@@ -27,16 +27,16 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # { container: 'ubuntu:20.04', target: g++-aarch64-linux-gnu, qemu: qemu-aarch64 }
-          # { container: 'ubuntu:20.04', target: g++-arm-linux-gnueabi, qemu: qemu-arm }
-          # { container: 'ubuntu:20.04', target: g++-arm-linux-gnueabihf, qemu: qemu-arm }
-          # { container: 'ubuntu:20.04', target: g++-i686-linux-gnu, qemu: qemu-i386 }
-          # { container: 'ubuntu:20.04', target: g++-mips-linux-gnu, qemu: qemu-mips }
-          # { container: 'ubuntu:20.04', target: g++-mipsel-linux-gnu, qemu: qemu-mipsel }
-          # { container: 'ubuntu:20.04', target: g++-powerpc-linux-gnu, qemu: qemu-ppc }
+          - { container: 'ubuntu:20.04', target: g++-aarch64-linux-gnu, qemu: qemu-aarch64 }
+          - { container: 'ubuntu:20.04', target: g++-arm-linux-gnueabi, qemu: qemu-arm }
+          - { container: 'ubuntu:20.04', target: g++-arm-linux-gnueabihf, qemu: qemu-arm }
+          - { container: 'ubuntu:20.04', target: g++-i686-linux-gnu, qemu: qemu-i386 }
+          - { container: 'ubuntu:20.04', target: g++-mips-linux-gnu, qemu: qemu-mips }
+          - { container: 'ubuntu:20.04', target: g++-mipsel-linux-gnu, qemu: qemu-mipsel }
+          - { container: 'ubuntu:20.04', target: g++-powerpc-linux-gnu, qemu: qemu-ppc }
           - { container: 'ubuntu:20.04', target: g++-powerpc64-linux-gnu, qemu: qemu-ppc64 }
-          # { container: 'ubuntu:20.04', target: g++-powerpc64le-linux-gnu, qemu: qemu-ppc64le }
-          # { container: 'ubuntu:20.04', target: g++-riscv64-linux-gnu, qemu: qemu-riscv64 }
+          - { container: 'ubuntu:20.04', target: g++-powerpc64le-linux-gnu, qemu: qemu-ppc64le }
+          - { container: 'ubuntu:20.04', target: g++-riscv64-linux-gnu, qemu: qemu-riscv64 }
 
           - { container: 'ubuntu:22.04', target: g++-aarch64-linux-gnu, qemu: qemu-aarch64 }
           - { container: 'ubuntu:22.04', target: g++-arm-linux-gnueabi, qemu: qemu-arm }
@@ -56,8 +56,8 @@ jobs:
           - { container: 'ubuntu:24.04', target: g++-mips-linux-gnu, qemu: qemu-mips }
           - { container: 'ubuntu:24.04', target: g++-mipsel-linux-gnu, qemu: qemu-mipsel }
           - { container: 'ubuntu:24.04', target: g++-powerpc-linux-gnu, qemu: qemu-ppc }
-          - { container: 'ubuntu:24.04', target: g++-powerpc64-linux-gnu, qemu: qemu-ppc64 }
-          - { container: 'ubuntu:24.04', target: g++-powerpc64le-linux-gnu, qemu: qemu-ppc64le }
+          - { container: 'ubuntu:24.04', target: g++-powerpc64-linux-gnu, qemu: qemu-ppc64 -cpu power10 }
+          - { container: 'ubuntu:24.04', target: g++-powerpc64le-linux-gnu, qemu: qemu-ppc64le -cpu power10 }
           - { container: 'ubuntu:24.04', target: g++-riscv64-linux-gnu, qemu: qemu-riscv64 }
 
           - { container: 'ubuntu:26.04', target: g++-aarch64-linux-gnu, qemu: qemu-aarch64 }
@@ -67,8 +67,8 @@ jobs:
           # { container: 'ubuntu:26.04', target: g++-mips-linux-gnu, qemu: qemu-mips }
           # { container: 'ubuntu:26.04', target: g++-mipsel-linux-gnu, qemu: qemu-mipsel }
           - { container: 'ubuntu:26.04', target: g++-powerpc-linux-gnu, qemu: qemu-ppc }
-          - { container: 'ubuntu:26.04', target: g++-powerpc64-linux-gnu, qemu: qemu-ppc64 }
-          - { container: 'ubuntu:26.04', target: g++-powerpc64le-linux-gnu, qemu: qemu-ppc64le }
+          - { container: 'ubuntu:26.04', target: g++-powerpc64-linux-gnu, qemu: qemu-ppc64 -cpu power10 }
+          - { container: 'ubuntu:26.04', target: g++-powerpc64le-linux-gnu, qemu: qemu-ppc64le -cpu power10 }
           - { container: 'ubuntu:26.04', target: g++-riscv64-linux-gnu, qemu: qemu-riscv64 }
 
           - { container: 'ubuntu:20.04', target: g++-mingw-w64-i686, wine: wine }
@@ -190,6 +190,7 @@ jobs:
               export CMAKE_SYSTEM_NAME=Windows
               export CMAKE_SYSTEM_PROCESSOR=X86
               export CMAKE_CROSSCOMPILING_EMULATOR=wine
+              CC="$CC -D_WIN32_WINNT=0x0501"; CXX="$CXX -D_WIN32_WINNT=0x0501"
               CC="$CC -static"; CXX="$CXX -static" ;;
             x86_64-w64-mingw32)
               export UPX_CONFIG_DISABLE_SANITIZE=ON
@@ -197,8 +198,18 @@ jobs:
               export CMAKE_SYSTEM_NAME=Windows
               export CMAKE_SYSTEM_PROCESSOR=AMD64
               export CMAKE_CROSSCOMPILING_EMULATOR=wine
+              CC="$CC -D_WIN32_WINNT=0x0501"; CXX="$CXX -D_WIN32_WINNT=0x0501"
               CC="$CC -static"; CXX="$CXX -static" ;;
           esac
+          if [[ "${{ matrix.container }}" == ubuntu:2[46].04 && $toolchain == powerpc64*-linux-gnu ]]; then true;
+            export CC="$CC -mcpu=power10" CXX="$CXX -mcpu=power10"
+          fi
+          if [[ $toolchain == riscv64-linux-gnu ]]; then true;
+            #export CC="$CC -mno-strict-align" CXX="$CXX -mno-strict-align"
+          fi
+          if [[ "${{ matrix.container }}" == ubuntu:2[46].04 && $toolchain == riscv64-linux-gnu ]]; then true;
+            export CC="$CC -mtune=thead-c906" CXX="$CXX -mtune=thead-c906"
+          fi
           export UPX_CONFIG_DISABLE_SELF_PACK_TEST=ON
           [[ $toolchain == aarch64-linux-gnu ]] && export UPX_CONFIG_DISABLE_SELF_PACK_TEST=OFF
           [[ $toolchain == arm-linux-gnu* ]] && export UPX_CONFIG_DISABLE_SELF_PACK_TEST=OFF
@@ -211,9 +222,15 @@ jobs:
           [[ $toolchain == powerpc64le-linux-gnu ]] && export UPX_CONFIG_DISABLE_SELF_PACK_TEST=OFF
           [[ $toolchain == riscv64-linux-gnu ]] && export UPX_CONFIG_DISABLE_SELF_PACK_TEST=OFF
           [[ $toolchain == x86_64-linux-gnu ]] && export UPX_CONFIG_DISABLE_SELF_PACK_TEST=OFF
+          [[ "${{ matrix.container }}" == 'ubuntu:20.04' ]] && export UPX_CONFIG_DISABLE_SELF_PACK_TEST=ON
+          [[ "${{ matrix.container }}" == 'ubuntu:22.04' && $toolchain == riscv64-linux-gnu ]] && export UPX_CONFIG_DISABLE_SELF_PACK_TEST=ON
           [[ $toolchain == i686-w64-mingw32 ]] && export UPX_CONFIG_DISABLE_SELF_PACK_TEST=OFF
           [[ $toolchain == x86_64-w64-mingw32  ]] && export UPX_CONFIG_DISABLE_SELF_PACK_TEST=OFF
           echo "UPX_CONFIG_DISABLE_SELF_PACK_TEST=$UPX_CONFIG_DISABLE_SELF_PACK_TEST" >> $GITHUB_ENV
+          if [[ 1 == 1 ]]; then true;
+            export CXX="$CXX -std=gnu++2a"
+            export UPX_CONFIG_DISABLE_CXX_STANDARD=ON
+          fi
           echo -e "CC=$CC\nCXX=$CXX" >> $GITHUB_ENV
           make UPX_XTARGET=xtarget/${toolchain} xtarget/all
 
@@ -228,6 +245,8 @@ jobs:
         run: |
           N=$(echo "upx-${GITHUB_REF_NAME}-${GITHUB_SHA:0:7}-${{ matrix.container }}-${{ matrix.target }}" | sed 's/[^0-9a-zA-Z_.+-]/-/g')
           mkdir -p "tmp/artifact/$N"
+          dirs="${toolchain}/debug ${toolchain}/release"
+          for d in $dirs; do DESTDIR="$PWD/tmp/artifact/$N/InstallWithCMake/InstallWithDestdir/$d" cmake --install build/xtarget/$d; done
           (cd build && shopt -s nullglob && cp -v -ai --parents */upx{,.exe} */*/*/upx{,.exe} "../tmp/artifact/$N")
           (cd build && shopt -s globstar && cp -v -ai --parents **/dt_cxxlib.* "../tmp/artifact/$N")
           if command -v hardlink >/dev/null; then (cd "tmp/artifact/$N" && hardlink .) fi
@@ -257,7 +276,7 @@ jobs:
           export upx_exe_runner="${{ matrix.qemu }}"
           upx_exe_runner="$upx_exe_runner -L /usr/${toolchain}"
           UPX_DEBUG_DOCTEST_VERBOSE=1 $upx_exe_runner ./build/xtarget/${toolchain}/debug/upx --sysinfo -vv || true
-          UPX_DEBUG_DOCTEST_VERBOSE=1 $upx_exe_runner ./build/xtarget/${toolchain}/release/upx --sysinfo -vv || true
+          UPX_DEBUG_DOCTEST_VERBOSE=1 $upx_exe_runner ./build/xtarget/${toolchain}/release/upx --sysinfo -vv
 
       - name: ${{ format('Run ctest tests with QEMU {0}', matrix.qemu) }}
         if: ${{ matrix.qemu }}
@@ -315,8 +334,8 @@ jobs:
         run: |
           set -x
           export upx_exe_runner="wine"
-          UPX_DEBUG_DOCTEST_VERBOSE=1 $upx_exe_runner ./build/xtarget/${toolchain}/debug/upx.exe --sysinfo -vv || true
-          UPX_DEBUG_DOCTEST_VERBOSE=1 $upx_exe_runner ./build/xtarget/${toolchain}/release/upx.exe --sysinfo -vv || true
+          UPX_DEBUG_DOCTEST_VERBOSE=1 $upx_exe_runner ./build/xtarget/${toolchain}/debug/upx.exe --sysinfo -vv
+          UPX_DEBUG_DOCTEST_VERBOSE=1 $upx_exe_runner ./build/xtarget/${toolchain}/release/upx.exe --sysinfo -vv
 
       - name: ${{ format('Run ctest tests with Wine {0}', matrix.wine) }}
         if: ${{ matrix.wine }}

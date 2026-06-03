@@ -7,6 +7,23 @@ ifeq ($(UPX_MAKEFILE_EXTRA_MK_INCLUDED),)
 override UPX_MAKEFILE_EXTRA_MK_INCLUDED := 1
 
 #***********************************************************************
+# fast test
+#***********************************************************************
+
+build/debug+fast:     $$(dir $$@)debug PHONY; cd "$(dir $@)debug" && $(CTEST) $(CTEST_FLAGS) -R "upx-sysinfo*" -C Debug
+build/%/debug+fast:   $$(dir $$@)debug PHONY; cd "$(dir $@)debug" && $(CTEST) $(CTEST_FLAGS) -R "upx-sysinfo*" -C Debug
+build/release+fast:   $$(dir $$@)release PHONY; cd "$(dir $@)release" && $(CTEST) $(CTEST_FLAGS) -R "upx-sysinfo*" -C Release
+build/%/release+fast: $$(dir $$@)release PHONY; cd "$(dir $@)release" && $(CTEST) $(CTEST_FLAGS) -R "upx-sysinfo*" -C Release
+build/%/all+fast:     $$(dir $$@)debug+fast $$(dir $$@)release+fast PHONY ;
+
+# shortcuts
+debug+fast:   build/debug+fast PHONY
+release+fast: build/release+fast PHONY
+all+fast build/all+fast: build/debug+fast build/release+fast PHONY
+
+fast: $$(patsubst %+test,%,$$(.DEFAULT_GOAL))+fast PHONY
+
+#***********************************************************************
 # support functions
 #***********************************************************************
 

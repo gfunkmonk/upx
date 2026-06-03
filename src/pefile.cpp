@@ -524,7 +524,10 @@ void PeFile32::processRelocs() { // pass1
             if (old_objs != ih.objects && 1) { // was removed
                 IDADDR(PEDIR_BASERELOC) = 0;
                 IDSIZE(PEDIR_BASERELOC) = 0;
-                ih.imagesize = isection[-1 + ih.objects].vsize + isection[-1 + ih.objects].vaddr;
+                const unsigned oam1 = ih.objectalign - 1;
+                ih.imagesize =
+                    (isection[-1 + ih.objects].vsize + isection[-1 + ih.objects].vaddr + oam1) &
+                    ~oam1;
             }
         }
         mb_orelocs.alloc(1);
@@ -632,7 +635,10 @@ void PeFile64::processRelocs() { // pass1
             if (old_objs != ih.objects && 1) { // was removed
                 IDADDR(PEDIR_BASERELOC) = 0;
                 IDSIZE(PEDIR_BASERELOC) = 0;
-                ih.imagesize = isection[-1 + ih.objects].vsize + isection[-1 + ih.objects].vaddr;
+                const unsigned oam1 = ih.objectalign - 1;
+                ih.imagesize =
+                    (isection[-1 + ih.objects].vsize + isection[-1 + ih.objects].vaddr + oam1) &
+                    ~oam1;
             }
         }
         mb_orelocs.alloc(1);
@@ -1349,7 +1355,7 @@ void PeFile::processExports(Export *xport) { // pass1
     soexport = ALIGN_UP(xport->getsize(), 4u);
     mb_oexport.alloc(soexport);
     mb_oexport.clear();
-    oexport = mb_oexport;
+    oexport = SPAN_S_MAKE(byte, mb_oexport); // => now is a SPAN_S
 }
 
 void PeFile::processExports(Export *xport, unsigned newoffs) { // pass2
@@ -2486,7 +2492,9 @@ void PeFile::pack0(OutputFile *fo, ht &ih, ht &oh, unsigned subsystem_mask,
     callCompressWithFilters(ft, filter_strategy, ih.codebase);
     // info: see buildLoader()
     newvsize = (ph.u_len + rvamin + ph.overlap_overhead + oam1) & ~oam1;
-    if (tlsindex && ((newvsize - ph.c_len - 1024 + oam1) & ~oam1) > tlsindex + 4)
+    // but keep PETLSHAK for DLLs: the loader sets the tls index after
+    // LoadLibrary, so it must survive decompression
+    if (tlsindex && !isdll && ((newvsize - ph.c_len - 1024 + oam1) & ~oam1) > tlsindex + 4)
         tlsindex = 0;
 
     const int oh_filealign = UPX_MIN(ih.filealign, 0x200u);
