@@ -266,6 +266,22 @@ ASSERT_SAME_TYPE(unsigned, upx_uint32_t);
 ASSERT_SAME_TYPE(long long, upx_int64_t);
 ASSERT_SAME_TYPE(unsigned long long, upx_uint64_t);
 #endif
+static_assert(sizeof(upx_int8_t) == 1, "");
+static_assert(sizeof(upx_uint8_t) == 1, "");
+static_assert(sizeof(upx_int16_t) == 2, "");
+static_assert(sizeof(upx_uint16_t) == 2, "");
+static_assert(sizeof(upx_int32_t) == 4, "");
+static_assert(sizeof(upx_uint32_t) == 4, "");
+static_assert(sizeof(upx_int64_t) == 8, "");
+static_assert(sizeof(upx_uint64_t) == 8, "");
+static_assert(alignof(upx_int8_t) == 1, "");
+static_assert(alignof(upx_uint8_t) == 1, "");
+static_assert(alignof(upx_int16_t) >= 1, "");
+static_assert(alignof(upx_uint16_t) >= 1, "");
+static_assert(alignof(upx_int32_t) >= 1, "");
+static_assert(alignof(upx_uint32_t) >= 1, "");
+static_assert(alignof(upx_int64_t) >= 1, "");
+static_assert(alignof(upx_uint64_t) >= 1, "");
 
 /*************************************************************************
 // compile-time checks

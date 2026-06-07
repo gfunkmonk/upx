@@ -113,7 +113,7 @@ static const int progress_bar_full_len = (int) (sizeof(progress_bar_full) - 1);
 static const char progress_bar_left = '[';
 static const char progress_bar_right = ']';
 
-static void init_global_constants(void) noexcept {
+static noinline void init_global_constants() noexcept {
 #if 0 && (ACC_OS_DOS16 || ACC_OS_DOS32)
     // FIXME: should test codepage here
 

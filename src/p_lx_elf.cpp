@@ -61,9 +61,7 @@ using upx::umin;
 #define PT_GNU_RELRO32  Elf32_Phdr::PT_GNU_RELRO
 #define PT_GNU_RELRO64  Elf64_Phdr::PT_GNU_RELRO
 
-// also see stub/src/MAX_ELF_HDR.[Sc]
-static constexpr unsigned MAX_ELF_HDR_32 = 512;
-static constexpr unsigned MAX_ELF_HDR_64 = 1024;
+#include "MAX_ELF_HDR.h"
 
 //static unsigned const EF_ARM_HASENTRY = 0x02;
 static unsigned const EF_ARM_EABI_VER4 = 0x04000000;
@@ -2845,14 +2843,14 @@ bool  // false [often throwCantPack]: some defect;  true: good so far
 PackLinuxElf32::canPackOSABI(Elf32_Ehdr const *ehdr)
 {
     unsigned char osabi0 = ehdr->e_ident[Elf32_Ehdr::EI_OSABI];
+    if (e_phnum > ((-3 + MAX_ELF_HDR_32 - sizeof(Elf32_Ehdr)) / sizeof(Elf32_Phdr))) {
+        throwCantPack("too many ElfXX_Phdr; try '--force-execve'");
+        return false;
+    }
     // The first PT_LOAD must cover the beginning of the file (0==p_offset).
     Elf32_Phdr const *phdr = phdri;
     note_size = 0;
     for (unsigned j=0; j < e_phnum; ++phdr, ++j) {
-        if (j > ((MAX_ELF_HDR_32 - sizeof(Elf32_Ehdr)) / sizeof(Elf32_Phdr))) {
-            throwCantPack("too many ElfXX_Phdr; try '--force-execve'");
-            return false;
-        }
         unsigned const p_type = get_te32(&phdr->p_type);
         unsigned const p_offset = get_te32(&phdr->p_offset);
         if (1!=exetype && PT_LOAD == p_type) { // 1st PT_LOAD
@@ -3071,6 +3069,11 @@ upx_uint64_t PackLinuxElf64::canPack_Shdr(Elf64_Phdr const *pload_x0)
 {
     Elf64_Shdr const *shdr_xva = nullptr;
     Elf64_Shdr const *shdr = shdri;
+    if (e_phnum > ((-3 + MAX_ELF_HDR_64 - sizeof(Elf64_Ehdr)) / sizeof(Elf64_Phdr))) {
+        throwCantPack("too many ElfXX_Phdr; try '--force-execve'");
+        return false;
+    }
+
   for (int j= e_shnum; --j>=0; ++shdr) {
     unsigned const sh_type = get_te32(&shdr->sh_type);
     if (!shdr_xva && Elf64_Shdr::SHF_EXECINSTR & get_te64(&shdr->sh_flags)) {
@@ -3218,7 +3221,6 @@ tribool PackLinuxElf32::canPack()
         unsigned char buf[MAX_ELF_HDR_32];
         //struct { Elf32_Ehdr ehdr; Elf32_Phdr phdr; } e;
     } u;
-    COMPILE_TIME_ASSERT(sizeof(u.buf) <= (2*512))
 
 // My earlier design with "extra" Shdrs in output at xct_off
 // DOES NOT WORK because code for EM_ARM has embedded relocations
@@ -3267,10 +3269,6 @@ tribool PackLinuxElf32::canPack()
     upx_uint32_t max_LOADsz = 0, max_offset = 0;
     Elf32_Phdr *phdr = phdri;
     for (unsigned j=0; j < e_phnum; ++phdr, ++j) {
-        if (j > ((MAX_ELF_HDR_32 - sizeof(Elf32_Ehdr)) / sizeof(Elf32_Phdr))) {
-            throwCantPack("too many ElfXX_Phdr; try '--force-execve'");
-            return false;
-        }
         upx_uint32_t const p_offset = get_te32(&phdr->p_offset);
         upx_uint32_t const p_filesz = get_te32(&phdr->p_filesz);
         if (this->file_size_u32 <= p_offset
@@ -3550,7 +3548,6 @@ tribool PackLinuxElf64::canPack()
         unsigned char buf[MAX_ELF_HDR_64];
         //struct { Elf64_Ehdr ehdr; Elf64_Phdr phdr; } e;
     } u;
-    COMPILE_TIME_ASSERT(sizeof(u) <= (2*1024))
 
     fi->readx(u.buf, sizeof(u.buf));
     fi->seek(0, SEEK_SET);
@@ -3570,13 +3567,13 @@ tribool PackLinuxElf64::canPack()
         return false;
     }
 
+    if (e_phnum > ((-3 + MAX_ELF_HDR_64 - sizeof(Elf64_Ehdr)) / sizeof(Elf64_Phdr))) {
+        throwCantPack("too many ElfXX_Phdr; try '--force-execve'");
+        return false;
+    }
     upx_uint64_t max_LOADsz = 0, max_offset = 0;
     Elf64_Phdr const *phdr = phdri;
     for (unsigned j=0; j < e_phnum; ++phdr, ++j) {
-        if (j > ((MAX_ELF_HDR_64 - sizeof(Elf64_Ehdr)) / sizeof(Elf64_Phdr))) {
-            throwCantPack("too many ElfXX_Phdr; try '--force-execve'");
-            return false;
-        }
         upx_uint64_t const p_offset = get_te64(&phdr->p_offset);
         upx_uint64_t const p_filesz = get_te64(&phdr->p_filesz);
         if (this->file_size_u64 <= p_offset
@@ -7907,7 +7904,7 @@ void PackLinuxElf64::unpack(OutputFile *fo)
         fi->seek(- (off_t) (szb_info + ph.c_len), SEEK_CUR);
 
         u_phnum = get_te16(&ehdr->e_phnum);
-        if ((umin(MAX_ELF_HDR_64, ph.u_len) - sizeof(Elf64_Ehdr))/sizeof(Elf64_Phdr) < u_phnum) {
+        if ((umin((unsigned)MAX_ELF_HDR_64, ph.u_len) - sizeof(Elf64_Ehdr))/sizeof(Elf64_Phdr) < u_phnum) {
             throwCantUnpack("bad compressed e_phnum");
         }
         o_elfhdrs.alloc(sizeof(Elf64_Ehdr) + u_phnum * sizeof(Elf64_Phdr));
@@ -9154,7 +9151,7 @@ void PackLinuxElf32::unpack(OutputFile *fo)
         fi->seek(- (off_t) (szb_info + ph.c_len), SEEK_CUR);
 
         u_phnum = get_te16(&ehdr->e_phnum);
-        if ((umin(MAX_ELF_HDR_32, ph.u_len) - sizeof(Elf32_Ehdr))/sizeof(Elf32_Phdr) < u_phnum) {
+        if ((umin((unsigned)MAX_ELF_HDR_32, ph.u_len) - sizeof(Elf32_Ehdr))/sizeof(Elf32_Phdr) < u_phnum) {
             throwCantUnpack("bad compressed e_phnum");
         }
         o_elfhdrs.alloc(sizeof(Elf32_Ehdr) + u_phnum * sizeof(Elf32_Phdr));
