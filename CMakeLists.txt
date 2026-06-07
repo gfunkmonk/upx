@@ -34,10 +34,13 @@ else()
     cmake_minimum_required(VERSION "3.12" FATAL_ERROR) # CMake >= 3.12 is needed for CXX_STANDARD 20
 endif()
 
+set(UPX_VERSION_STRING "5.2.0") # this should match src/version.h
+
 # support functions and some utility
 include("${CMAKE_CURRENT_SOURCE_DIR}/misc/cmake/functions.cmake")
 upx_print_var(CMAKE_VERSION UPX_CONFIG_CMAKE_MINIMUM_REQUIRED_VERSION CMAKE_GENERATOR)
 upx_print_var(CMAKE_GENERATOR_TOOLSET CMAKE_GENERATOR_PLATFORM)
+upx_print_var(UPX_VERSION_STRING)
 upx_print_env_var(CC CXX CPPFLAGS CFLAGS CXXFLAGS)
 
 #***********************************************************************
@@ -70,8 +73,6 @@ option(UPX_CONFIG_DISABLE_EXHAUSTIVE_TESTS "Do not run exhaustive tests."       
 #***********************************************************************
 # init
 #***********************************************************************
-
-set(UPX_VERSION_STRING "5.1.3") # this should match src/version.h
 
 upx_cmake_include_hook(2_init)
 

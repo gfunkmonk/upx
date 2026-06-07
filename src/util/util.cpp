@@ -499,7 +499,7 @@ TEST_CASE("upx_memswap") {
 #if __cplusplus >= 202002L // use C++20 std::next_permutation() to test all permutations
 namespace {
 template <class ElementType, upx_compare_func_t CompareFunc>
-struct TestSortAllPermutations {
+struct TestSortAllPermutations final {
     typedef ElementType element_type;
     static noinline upx_uint64_t test(upx_sort_func_t sort, size_t n) {
         constexpr size_t N = 16;
