@@ -1,8 +1,8 @@
 #pragma once
-#define UPX_VERSION_HEX      0x050200 /* 05.02.00 */
-#define UPX_VERSION_STRING   "5.2.0"
-#define UPX_VERSION_STRING4  "5.20"
-#define UPX_VERSION_DATE     "Jun 5th 2026"
-#define UPX_VERSION_DATE_ISO "2026-06-05"
+#define UPX_VERSION_HEX      0x050201 /* 05.02.01 */
+#define UPX_VERSION_STRING   "5.2.1"
+#define UPX_VERSION_STRING4  "5.21"
+#define UPX_VERSION_DATE     "Jun 9th 2026"
+#define UPX_VERSION_DATE_ISO "2026-06-09"
 #define UPX_VERSION_YEAR     "2026"
 

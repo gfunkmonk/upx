@@ -66,14 +66,14 @@ jobs:
             llvm_version: 21.1.8
             use_arm64ec: true
             url: 'https://github.com/mstorsjo/llvm-mingw/releases/download/20251216/llvm-mingw-20251216-ucrt-ubuntu-22.04-x86_64.tar.xz'
-          - name: llvm-mingw-20260602-msvcrt
-            llvm_version: 22.1.7
+          - name: llvm-mingw-20260616-msvcrt
+            llvm_version: 22.1.8
             use_arm64ec: true
-            url: 'https://github.com/mstorsjo/llvm-mingw/releases/download/20260602/llvm-mingw-20260602-msvcrt-ubuntu-22.04-x86_64.tar.xz'
-          - name: llvm-mingw-20260602-ucrt
-            llvm_version: 22.1.7
+            url: 'https://github.com/mstorsjo/llvm-mingw/releases/download/20260616/llvm-mingw-20260616-msvcrt-ubuntu-22.04-x86_64.tar.xz'
+          - name: llvm-mingw-20260616-ucrt
+            llvm_version: 22.1.8
             use_arm64ec: true
-            url: 'https://github.com/mstorsjo/llvm-mingw/releases/download/20260602/llvm-mingw-20260602-ucrt-ubuntu-22.04-x86_64.tar.xz'
+            url: 'https://github.com/mstorsjo/llvm-mingw/releases/download/20260616/llvm-mingw-20260616-ucrt-ubuntu-22.04-x86_64.tar.xz'
 
     env:
       container: 'ubuntu:26.04'
@@ -117,6 +117,8 @@ jobs:
           echo "PATH=$PWD:$PATH" >> $GITHUB_ENV
           echo "$PWD"; ls -laF
 
+      - run: ls -laF "$HOME" "$GITHUB_WORKSPACE" || true
+      - run: set -x; cat "$HOME/.gitconfig" || true
       - run: cd ~/.local/bin/llvm-mingw*/. && echo "$PWD" && ls -laF
       - run: cd ~/.local/bin/llvm-mingw*/. && echo "$PWD" && tree -sF -d --du
       # run: cd ~/.local/bin/llvm-mingw*/. && echo "$PWD" && tree -sF    --du

@@ -34,7 +34,7 @@ else()
     cmake_minimum_required(VERSION "3.12" FATAL_ERROR) # CMake >= 3.12 is needed for CXX_STANDARD 20
 endif()
 
-set(UPX_VERSION_STRING "5.2.0") # this should match src/version.h
+set(UPX_VERSION_STRING "5.2.1") # this should match src/version.h
 
 # support functions and some utility
 include("${CMAKE_CURRENT_SOURCE_DIR}/misc/cmake/functions.cmake")
@@ -479,6 +479,8 @@ if(NOT CMAKE_CROSSCOMPILING OR CMAKE_CROSSCOMPILING_EMULATOR)
         include("${CMAKE_CURRENT_SOURCE_DIR}/misc/cmake/self_pack_test.cmake")
         upx_self_pack_test()
     endif()
+else()
+    message(STATUS "CMAKE_CROSSCOMPILING = ON")
 endif()
 
 endif() # UPX_CONFIG_CMAKE_DISABLE_TEST
@@ -494,11 +496,6 @@ upx_cmake_include_hook(7_install)
 
 if(NOT UPX_CONFIG_CMAKE_DISABLE_INSTALL)
 
-# installation prefix and directories
-if(NOT CMAKE_INSTALL_PREFIX)
-    #message(FATAL_ERROR "ERROR: CMAKE_INSTALL_PREFIX is not defined")
-    message(WARNING "WARNING: CMAKE_INSTALL_PREFIX is not defined")
-endif()
 # install files
 if(CMAKE_INSTALL_PREFIX AND DEFINED CMAKE_INSTALL_BINDIR)
     install(TARGETS upx DESTINATION "${CMAKE_INSTALL_BINDIR}")
@@ -507,6 +504,9 @@ if(CMAKE_INSTALL_PREFIX AND DEFINED CMAKE_INSTALL_BINDIR)
         DESTINATION "${CMAKE_INSTALL_DOCDIR}"
     )
     install(FILES doc/upx.1 DESTINATION "${CMAKE_INSTALL_MANDIR}/man1")
+else()
+    #message(FATAL_ERROR "ERROR: CMAKE_INSTALL_PREFIX is not defined")
+    message(WARNING "WARNING: CMAKE_INSTALL_PREFIX is not defined")
 endif()
 
 endif() # UPX_CONFIG_CMAKE_DISABLE_INSTALL

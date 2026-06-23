@@ -27,6 +27,7 @@
 
 // main entry, mostly boring stuff; see work.cpp for actual action
 
+#define WANT_WINDOWS_LEAN_H 1
 #include "conf.h"
 #include "packer.h"            // Packer::isValidCompressionMethod()
 #include "p_elf.h"             // ELFOSABI_xxx
@@ -1329,10 +1330,10 @@ int upx_main(int argc, char *argv[]) may_throw {
             e_usage();
     }
 
-    /* start work */
+    /* start work; see work.cpp */
     set_term(stdout);
     if (do_files(i, argc, argv) != 0) {
-        assert(exit_code != 0);
+        assert_noexcept(exit_code != 0);
         return exit_code;
     }
 

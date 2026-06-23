@@ -376,7 +376,7 @@ private:                                                                        
 #define UPX_CXX_DISABLE_NEW_DELETE_NO_VIRTUAL(Klass) private:
 #endif
 
-class NonCopyAble {
+class NonCopyAble /*not_final*/ {
 protected:
     forceinline constexpr NonCopyAble() noexcept {}
 #if __cplusplus >= 202002L

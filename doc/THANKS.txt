@@ -51,6 +51,8 @@ Lukundoo <Lukundoo@softhome.net>
   for beta testing
 Michael Devore
   for initial dos/exe device driver support
+netliomax25-code <netliomax25@gmail.com>
+  for beta testing
 Oleg V. Volkov <rover@lglobus.ru>
   for various FreeBSD specific information
 The Owl & G-RoM

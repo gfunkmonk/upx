@@ -37,7 +37,7 @@
 
 namespace {
 template <class T>
-struct TestXSpanCG {
+struct TestXSpanCG final {
     // create a value
     static noinline XSPAN_0(T) make_span_0_0(T *p, size_t bytes) {
         XSPAN_0(T) r = XSPAN_0_MAKE(T, p, XSpanSizeInBytes(bytes));

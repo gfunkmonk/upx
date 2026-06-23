@@ -152,6 +152,7 @@ struct PackerNames final {
     const Options *o = nullptr;
 
     void add(const PackerBase *pb) {
+        assert_noexcept(pb != nullptr);
         assert_noexcept(names_count < MAX_NAMES);
         Entry &e = names_array[names_count];
         names[names_count++] = &e;
@@ -159,10 +160,14 @@ struct PackerNames final {
         e.sname = pb->getName();
         assert_noexcept(e.fname != nullptr && e.fname[0]);
         assert_noexcept(e.sname != nullptr && e.sname[0]);
+        assert_noexcept(Packer::isValidFormat(pb->getFormat()));
         e.methods_count = e.filters_count = 0;
         for (const int *m = pb->getCompressionMethods(M_ALL, 10); *m != M_END; m++) {
             if (*m >= 0) {
                 assert_noexcept(Packer::isValidCompressionMethod(*m));
+                assert_noexcept(*m != 0);
+                for (unsigned mm = 0; mm < e.methods_count; mm++)
+                    assert_noexcept(e.methods[mm] != (unsigned) *m);
                 assert_noexcept(e.methods_count < PackerBase::MAX_METHODS);
                 e.methods[e.methods_count++] = *m;
             }
@@ -170,6 +175,9 @@ struct PackerNames final {
         for (const int *f = pb->getFilters(); f != nullptr && *f != FT_END; f++) {
             if (*f >= 0) {
                 assert_noexcept(Filter::isValidFilter(*f));
+                assert_noexcept(*f != 0);
+                for (unsigned ff = 0; ff < e.filters_count; ff++)
+                    assert_noexcept(e.filters[ff] != (unsigned) *f);
                 assert_noexcept(e.filters_count < PackerBase::MAX_FILTERS);
                 e.filters[e.filters_count++] = *f;
             }
@@ -179,6 +187,8 @@ struct PackerNames final {
         upx_gnomesort(e.filters, e.filters_count, sizeof(e.filters[0]), ne32_compare);
     }
     static tribool visit(PackerBase *pb, void *user) {
+        assert_noexcept(pb != nullptr);
+        assert_noexcept(user != nullptr);
         NO_fprintf(stderr, "visit %s\n", pb->getFullName(nullptr));
         PackerNames *self = (PackerNames *) user;
         self->add(pb);
@@ -195,6 +205,7 @@ struct PackerNames final {
 static noinline void list_all_packers(FILE *f, int verbose) {
     Options o;
     o.reset();
+    o.o_unix.use_ptinterp = true;
     PackerNames pn;
     pn.o = &o;
     (void) PackMaster::visitAllPackers(PackerNames::visit, nullptr, &o, &pn);

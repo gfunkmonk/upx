@@ -2988,6 +2988,9 @@ upx_uint64_t PackLinuxElf32::canPack_Shdr(Elf32_Phdr const *pload_x0)
                         }
                         else if (R_ARM_ABS32 == r_type) {
                             unsigned symj = ELF32_R_SYM(r_info);
+                            if (symnum_max <= symj) {
+                                throwCantPack("bad symbol %#x in DT_INIT_ARRAY[0] relocation", symj);
+                            }
                             user_init_va = get_te32(&dynsym[symj].st_value);
                             set_te32(&rp->r_info, ELF32_R_INFO(0, R_ARM_RELATIVE));
                             // pack3() will set &file_image[user_init_off]
@@ -3002,6 +3005,9 @@ upx_uint64_t PackLinuxElf32::canPack_Shdr(Elf32_Phdr const *pload_x0)
                         }
                         else if (R_386_32 == r_type) {
                             unsigned symj = ELF32_R_SYM(r_info);
+                            if (symnum_max <= symj) {
+                                throwCantPack("bad symbol %#x in DT_INIT_ARRAY[0] relocation", symj);
+                            }
                             user_init_va = get_te32(&dynsym[symj].st_value);
                             set_te32(&rp->r_info, ELF32_R_INFO(0, R_386_RELATIVE));
                             // pack3() will set &file_image[user_init_off]
@@ -3130,7 +3136,11 @@ upx_uint64_t PackLinuxElf64::canPack_Shdr(Elf64_Phdr const *pload_x0)
                             user_init_va = get_te64(&rp->r_addend);
                         }
                         else if (R_AARCH64_ABS64 == r_type) {
-                            user_init_va = get_te64(&dynsym[ELF64_R_SYM(r_info)].st_value);
+                            unsigned const symj = ELF64_R_SYM(r_info);
+                            if (symnum_max <= symj) {
+                                throwCantPack("bad symbol %#x in DT_INIT_ARRAY[0] relocation", symj);
+                            }
+                            user_init_va = get_te64(&dynsym[symj].st_value);
                         }
                         else {
                             char msg[50]; snprintf(msg, sizeof(msg),
@@ -3144,7 +3154,11 @@ upx_uint64_t PackLinuxElf64::canPack_Shdr(Elf64_Phdr const *pload_x0)
                             user_init_va = get_te64(&rp->r_addend);
                         }
                         else if (R_RISCV_64 == r_type) {
-                            user_init_va = get_te64(&dynsym[ELF64_R_SYM(r_info)].st_value);
+                            unsigned const symj = ELF64_R_SYM(r_info);
+                            if (symnum_max <= symj) {
+                                throwCantPack("bad symbol %#x in DT_INIT_ARRAY[0] relocation", symj);
+                            }
+                            user_init_va = get_te64(&dynsym[symj].st_value);
                         }
                         else {
                             char msg[50]; snprintf(msg, sizeof(msg),
@@ -3158,7 +3172,11 @@ upx_uint64_t PackLinuxElf64::canPack_Shdr(Elf64_Phdr const *pload_x0)
                             user_init_va = get_te64(&rp->r_addend);
                         }
                         else if (R_X86_64_64 == r_type) {
-                            user_init_va = get_te64(&dynsym[ELF64_R_SYM(r_info)].st_value);
+                            unsigned const symj = ELF64_R_SYM(r_info);
+                            if (symnum_max <= symj) {
+                                throwCantPack("bad symbol %#x in DT_INIT_ARRAY[0] relocation", symj);
+                            }
+                            user_init_va = get_te64(&dynsym[symj].st_value);
                         }
                         else {
                             char msg[50]; snprintf(msg, sizeof(msg),
@@ -4533,6 +4551,12 @@ void PackLinuxElf32::pack1(OutputFile * /*fo*/, Filter &ft)
     if (opt->o_unix.preserve_build_id) {
         // set this so we can use elf_find_section_name
         e_shnum = get_te16(&ehdri.e_shnum);
+        e_shstrndx = get_te16(&ehdri.e_shstrndx);
+        if (e_shnum <= e_shstrndx) {
+            char msg[50]; snprintf(msg, sizeof(msg),
+                "bad e_shstrndx %#x >= e_shnum %#x", e_shstrndx, e_shnum);
+            throwCantPack(msg);
+        }
         if (!shdri) {
             mb_shdr.alloc(e_shnum * sizeof(Elf32_Shdr));
             shdri = (Elf32_Shdr *)mb_shdr.getVoidPtr();
@@ -4541,7 +4565,7 @@ void PackLinuxElf32::pack1(OutputFile * /*fo*/, Filter &ft)
             fi->readx(shdri, e_shnum * sizeof(Elf32_Shdr));
         }
         //set the shstrtab
-        sec_strndx = &shdri[get_te16(&ehdri.e_shstrndx)];
+        sec_strndx = &shdri[e_shstrndx];
 
         upx_uint32_t sh_size = get_te32(&sec_strndx->sh_size);
         mb_shstrtab.alloc(sh_size); shstrtab = (char *)mb_shstrtab.getVoidPtr();
@@ -5385,6 +5409,12 @@ void PackLinuxElf64::pack1(OutputFile * /*fo*/, Filter &ft)
     if (opt->o_unix.preserve_build_id) {
         // set this so we can use elf_find_section_name
         e_shnum = get_te16(&ehdri.e_shnum);
+        e_shstrndx = get_te16(&ehdri.e_shstrndx);
+        if (e_shnum <= e_shstrndx) {
+            char msg[50]; snprintf(msg, sizeof(msg),
+                "bad e_shstrndx %#x >= e_shnum %#x", e_shstrndx, e_shnum);
+            throwCantPack(msg);
+        }
         if (!shdri) {
             mb_shdr.alloc(e_shnum * sizeof(Elf64_Shdr));
             shdri = (Elf64_Shdr *)mb_shdr.getVoidPtr();
@@ -5393,7 +5423,7 @@ void PackLinuxElf64::pack1(OutputFile * /*fo*/, Filter &ft)
             fi->readx(shdri, e_shnum * sizeof(Elf64_Shdr));
         }
         //set the shstrtab
-        sec_strndx = &shdri[get_te16(&ehdri.e_shstrndx)];
+        sec_strndx = &shdri[e_shstrndx];
 
         upx_uint64_t sh_size = get_te64(&sec_strndx->sh_size);
         mb_shstrtab.alloc(sh_size); shstrtab = (char *)mb_shstrtab.getVoidPtr();
@@ -7502,6 +7532,10 @@ void PackLinuxElf32::un_DT_INIT(
                 Elf32_Rel *rp = (Elf32_Rel *)elf_find_dynamic(dyn_null->d_val);
                 dyn_null->d_val = 0;
                 if (rp) {
+                    if ((char *)rp + sizeof(Elf32_Rel) > (char *)&file_image[0] + file_size_u)
+                        throwCantUnpack("bad DT_INIT_ARRAY relocation offset");
+                    if ((char *)&dynsym[1] > (char *)&file_image[0] + file_size_u)
+                        throwCantUnpack("bad dynsym for DT_INIT_ARRAY");
                     // Compressor saved the original *rp in dynsym[0]
                     Elf32_Rel *rp_unc = (Elf32_Rel *)&dynsym[0];  // pointer
                     rp->r_info = rp_unc->r_info;  // restore original r_info; r_offset not touched

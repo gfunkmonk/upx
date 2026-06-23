@@ -494,7 +494,7 @@ noreturn void throwAssertFailed(const char *expr, const char *file, int line, co
 #endif
 #define assert_noexcept(e)                                                                         \
     ((void) (__acc_cte(e) || (assertFailed(#e, __FILE__, __LINE__, __func__), 0)))
-#define assert_noexcept2(e) assertFailed(e, #e, __FILE__, __LINE__, __func__)
+#define assert_noexcept2(e) (assertFailed(e, #e, __FILE__, __LINE__, __func__))
 #else
 #define assert_noexcept  assert
 #define assert_noexcept2 assert

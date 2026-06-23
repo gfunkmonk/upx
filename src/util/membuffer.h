@@ -36,7 +36,7 @@
 **************************************************************************/
 
 template <class T>
-class MemBufferBase {
+class MemBufferBase /*not_final*/ {
 public:
     typedef T element_type;
     typedef typename std::add_lvalue_reference<T>::type reference;
