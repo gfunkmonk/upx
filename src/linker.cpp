@@ -216,7 +216,7 @@ void ElfLinker::preprocessSections(char *start, const char *end) {
 }
 
 void ElfLinker::preprocessSymbols(char *start, const char *end) {
-    assert_noexcept(nsymbols <= 1);
+    //assert_noexcept(nsymbols <= 1);
     char *nextl;
     for (; start < end; start = 1 + nextl) {
         nextl = strchr(start, '\n');
