@@ -2677,9 +2677,10 @@ Elf32_Shdr const *PackLinuxElf32::elf_find_section_name(
         return nullptr;
     }
     int j = e_shnum;
+    unsigned const sh_strsz = mb_shstrtab.getSizeInBytes();  // actual .shstrtab buffer
     for (; 0 <=--j; ++shdr) {
         unsigned const sh_name = get_te32(&shdr->sh_name);
-        if ((u32_t)file_size <= sh_name) {  // FIXME: weak
+        if (sh_strsz <= sh_name) {  // sh_name must index within the shstrtab buffer
             char msg[50]; snprintf(msg, sizeof(msg),
                 "bad Elf32_Shdr[%d].sh_name %#x",
                 -1+ e_shnum -j, sh_name);
@@ -2701,9 +2702,10 @@ Elf64_Shdr const *PackLinuxElf64::elf_find_section_name(
         return nullptr;
     }
     int j = e_shnum;
+    unsigned const sh_strsz = mb_shstrtab.getSizeInBytes();  // actual .shstrtab buffer
     for (; 0 <=--j; ++shdr) {
         unsigned const sh_name = get_te32(&shdr->sh_name);
-        if ((u32_t)file_size <= sh_name) {  // FIXME: weak
+        if (sh_strsz <= sh_name) {  // sh_name must index within the shstrtab buffer
             char msg[50]; snprintf(msg, sizeof(msg),
                 "bad Elf64_Shdr[%d].sh_name %#x",
                 -1+ e_shnum -j, sh_name);
@@ -2774,7 +2776,11 @@ bool PackLinuxElf64::calls_crt1(Elf64_Rela const *rela, int sz)
     if (!dynsym || !dynstr || !rela) {
         return false;
     }
+    char const *const file_end = (char const *)&file_image[0] + file_size_u;
     for (unsigned relnum= 0; 0 < sz; (sz -= sizeof(Elf64_Rela)), ++rela, ++relnum) {
+        if (file_end < (char const *)(1+ rela)) {
+            break;  // DT_RELASZ/DT_PLTRELSZ runs past EOF
+        }
         unsigned const symnum = get_te64(&rela->r_info) >> 32;
         char const *const symnam = get_dynsym_name(symnum, relnum);
         if (0==strcmp(symnam, "__libc_start_main")  // glibc
@@ -2810,7 +2816,11 @@ bool PackLinuxElf32::calls_crt1(Elf32_Rel const *rel, int sz)
     if (!dynsym || !dynstr || !rel) {
         return false;
     }
+    char const *const file_end = (char const *)&file_image[0] + file_size_u;
     for (unsigned relnum= 0; 0 < sz; (sz -= sizeof(Elf32_Rel)), ++rel, ++relnum) {
+        if (file_end < (char const *)(1+ rel)) {
+            break;  // DT_RELSZ/DT_PLTRELSZ runs past EOF
+        }
         unsigned const symnum = get_te32(&rel->r_info) >> 8;
         char const *const symnam = get_dynsym_name(symnum, relnum);
         if (0==strcmp(symnam, "__libc_start_main")  // glibc
@@ -4568,10 +4578,17 @@ void PackLinuxElf32::pack1(OutputFile * /*fo*/, Filter &ft)
         sec_strndx = &shdri[e_shstrndx];
 
         upx_uint32_t sh_size = get_te32(&sec_strndx->sh_size);
-        mb_shstrtab.alloc(sh_size); shstrtab = (char *)mb_shstrtab.getVoidPtr();
+        upx_uint32_t sh_offset = get_te32(&sec_strndx->sh_offset);
+        if ((upx_uint64_t)file_size < (upx_uint64_t)sh_offset + sh_size) {
+            char msg[64]; snprintf(msg, sizeof(msg),
+                "bad .shstrtab sh_offset %#x sh_size %#x", sh_offset, sh_size);
+            throwCantPack(msg);
+        }
+        mb_shstrtab.alloc(mem_size(1, sh_size, 1)); shstrtab = (char *)mb_shstrtab.getVoidPtr();
         fi->seek(0,SEEK_SET);
-        fi->seek(sec_strndx->sh_offset,SEEK_SET);
+        fi->seek(sh_offset,SEEK_SET);
         fi->readx(mb_shstrtab, sh_size);
+        mb_shstrtab[sh_size] = '\0';  // terminate so a name scan cannot run off the buffer
 
         Elf32_Shdr const *buildid = elf_find_section_name(".note.gnu.build-id");
         if (buildid) {
@@ -5426,10 +5443,19 @@ void PackLinuxElf64::pack1(OutputFile * /*fo*/, Filter &ft)
         sec_strndx = &shdri[e_shstrndx];
 
         upx_uint64_t sh_size = get_te64(&sec_strndx->sh_size);
-        mb_shstrtab.alloc(sh_size); shstrtab = (char *)mb_shstrtab.getVoidPtr();
+        upx_uint64_t sh_offset = get_te64(&sec_strndx->sh_offset);
+        if ((upx_uint64_t)file_size < sh_offset
+        ||  (upx_uint64_t)file_size - sh_offset < sh_size) {
+            char msg[64]; snprintf(msg, sizeof(msg),
+                "bad .shstrtab sh_offset %#llx sh_size %#llx",
+                (unsigned long long)sh_offset, (unsigned long long)sh_size);
+            throwCantPack(msg);
+        }
+        mb_shstrtab.alloc(mem_size(1, sh_size, 1)); shstrtab = (char *)mb_shstrtab.getVoidPtr();
         fi->seek(0,SEEK_SET);
-        fi->seek(sec_strndx->sh_offset,SEEK_SET);
+        fi->seek(sh_offset,SEEK_SET);
         fi->readx(mb_shstrtab, sh_size);
+        mb_shstrtab[sh_size] = '\0';  // terminate so a name scan cannot run off the buffer
 
         Elf64_Shdr const *buildid = elf_find_section_name(".note.gnu.build-id");
         if (buildid) {
@@ -7402,6 +7428,8 @@ void PackLinuxElf32::un_shlib_1(
             if (sz_block1 == sz_elf_hdrs) { // new style
                 unsigned const len = (yct_off ? yct_off : xct_off) - sz_elf_hdrs;
                 unsigned const ipos = fi->tell();
+                if ((upx_uint64_t)sz_elf_hdrs + len > ibuf.getSize())
+                    throwCantUnpack("bad xct_off or yct_off");
                 fi->seek(sz_elf_hdrs, SEEK_SET);
                 fi->readx(&ibuf[sz_elf_hdrs], len);
                 if (is_asl) {
@@ -7860,7 +7888,7 @@ void PackLinuxElf64::unpack(OutputFile *fo)
         || !mem_size_valid(1, blocksize, OVERHEAD))
         throwCantUnpack("p_info corrupted");
 
-    ibuf.alloc(blocksize + OVERHEAD);
+    ibuf.alloc(blocksize + OVERHEAD + (blocksize >> ELF_NRV_FUDGE));
     b_info bhdr; memset(&bhdr, 0, sizeof(bhdr));
     fi->readx(&bhdr, szb_info);
     ph.u_len = get_te32(&bhdr.sz_unc);
@@ -8945,6 +8973,10 @@ Elf32_Sym const *PackLinuxElf32::elf_lookup(char const *name) const
                             throwCantPack("bad DT_GNU_HASH[%#x]  head=%u",
                                 (unsigned)(hp - hasharr), hhead);
                         }
+                        if (symnum_max <= (unsigned)(dsp - dynsym)) {
+                            throwCantPack("bad gnu_hash chain past DT_SYMTAB[%#x]",
+                                symnum_max);
+                        }
                         k = get_te32(hp);
                         if (0==((h ^ k)>>1)) {
                             unsigned const st_name = get_te32(&dsp->st_name);
@@ -9057,6 +9089,10 @@ Elf64_Sym const *PackLinuxElf64::elf_lookup(char const *name) const
                             throwCantPack("bad gnu_hash[%#tx]  head=%u",
                                 hp - hasharr, hhead);
                         }
+                        if (symnum_max <= (unsigned)(dsp - dynsym)) {
+                            throwCantPack("bad gnu_hash chain past DT_SYMTAB[%#x]",
+                                symnum_max);
+                        }
                         k = get_te32(hp);
                         if (0==((h ^ k)>>1)) {
                             unsigned const st_name = get_te32(&dsp->st_name);
@@ -9128,7 +9164,7 @@ void PackLinuxElf32::unpack(OutputFile *fo)
         || !mem_size_valid(1, blocksize, OVERHEAD))
         throwCantUnpack("p_info corrupted");
 
-    ibuf.alloc(blocksize + OVERHEAD);
+    ibuf.alloc(blocksize + OVERHEAD + (blocksize >> ELF_NRV_FUDGE));
     b_info bhdr; memset(&bhdr, 0, sizeof(bhdr));
     fi->readx(&bhdr, szb_info);
     ph.u_len = get_te32(&bhdr.sz_unc);

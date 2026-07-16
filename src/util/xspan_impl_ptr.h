@@ -226,6 +226,7 @@ public: // raw access
                 xspan_fail_nullptr();
             if very_unlikely (__acc_cte(VALGRIND_CHECK_MEM_IS_ADDRESSABLE(ptr, bytes) != 0))
                 throwCantPack("raw_bytes valgrind-check-mem");
+            (void) mem_size_ptr(ptr, 1, bytes); // assert size
         }
         return ptr;
     }

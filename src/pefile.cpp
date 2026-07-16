@@ -138,8 +138,6 @@ bool PeFile::testUnpackVersion(int version) const {
     // known but not (yet?) supported
     if (cpu == IMAGE_FILE_MACHINE_ARMNT)
         throwCantPack("win32/armnt is not supported"); // obsolete
-    if (cpu == IMAGE_FILE_MACHINE_ARM64)
-        throwCantPack("win64/arm64 is not yet supported");
     // FIXME: it seems that arm64ec actually uses MACHINE_AMD64 ???
     if (cpu == IMAGE_FILE_MACHINE_ARM64EC)
         throwCantPack("win64/arm64ec is not yet supported");
@@ -147,6 +145,8 @@ bool PeFile::testUnpackVersion(int version) const {
     // supported
     if (cpu == IMAGE_FILE_MACHINE_AMD64)
         return UPX_F_W64PE_AMD64;
+    if (cpu == IMAGE_FILE_MACHINE_ARM64)
+        return UPX_F_W64PE_ARM64;
     if (cpu == IMAGE_FILE_MACHINE_ARM || cpu == IMAGE_FILE_MACHINE_THUMB)
         return UPX_F_WINCE_ARM;
     if (cpu >= IMAGE_FILE_MACHINE_I386 && cpu <= 0x150) // what is this 0x150 ???
@@ -2152,10 +2152,10 @@ unsigned PeFile::stripDebug(unsigned overlaystart) {
             dd->fpos <= (file_size_u - sizeof(LE32))) {
             // fpos need not belong to any PEDIR_* section.
             // Read directly from input file, but keep position (paranoia).
-            LE32 word;
-            upx_off_t const now_pos = fi->tell();
+            LE32 word = {};
+            const upx_off_t now_pos = fi->tell();
             fi->seek(dd->fpos, SEEK_SET);
-            fi->read(&word, sizeof(word));
+            fi->readx(&word, sizeof(word));
             fi->seek(now_pos, SEEK_SET);
             if (IMAGE_DLLCHARACTERISTICS_EX_CET_COMPAT & word) {
                 *(dbgCET = dd0) = *dd; // remember presence; copy to front
@@ -2254,8 +2254,7 @@ unsigned PeFile::handleStripRelocs(upx_uint64_t ih_imagebase, upx_uint64_t defau
         if (isdll || isefi)
             throwCantPack("--strip-relocs is not allowed with DLL and EFI images");
         if (dllflags & IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE) {
-            if (opt->force) // Disable ASLR
-            {
+            if (opt->force) { // Disable ASLR
                 // The bit is set, so clear it with XOR
                 dllflags ^= IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE;
                 // HIGH_ENTROPY_VA has no effect without DYNAMIC_BASE, so clear
@@ -2934,7 +2933,7 @@ void PeFile::rebuildResources(SPAN_S(byte) & extra_info, unsigned lastvaddr) {
 
     // INFO: use VPtr for "virtual pointer" pointing before a buffer
     //// const byte *const r = ibuf.raw_bytes(0) - lastvaddr;
-    VPtr<const byte> const r{ibuf, lastvaddr};
+    const VPtr<const byte> r{ibuf, lastvaddr};
     Resource res(raw_bytes(r + vaddr, 0), ibuf, ibuf + ibuf.getSize());
     while (res.next())
         if (res.offs() > vaddr) {
@@ -2988,7 +2987,7 @@ void PeFile::rebuildImports(SPAN_S(byte) & extra_info, ord_mask_t ord_mask, bool
 
     // INFO: use VPtr for "virtual pointer" pointing before a buffer
     //// byte *const Obuf = obuf.raw_bytes(0) - rvamin;
-    VPtr<byte> const Obuf{obuf, rvamin};
+    const VPtr<byte> Obuf{obuf, rvamin};
     SPAN_S_VAR(import_desc, im, (import_desc *) raw_bytes(Obuf + ODADDR(PEDIR_IMPORT), 0), obuf);
     SPAN_0_VAR(byte, dllnames, inamespos ? raw_bytes(Obuf + inamespos, 0) : nullptr, obuf);
     SPAN_0_VAR(byte, const importednames_start, inamespos ? dllnames + sdllnames : nullptr);
@@ -3235,7 +3234,7 @@ PeFile::~PeFile() noexcept {
 }
 
 /*************************************************************************
-//  PeFile32
+// PeFile32
 **************************************************************************/
 
 PeFile32::PeFile32(InputFile *f) : super(f) {
@@ -3290,7 +3289,7 @@ void PeFile32::processTls(Reloc *r, const Interval *iv, unsigned a) {
 }
 
 /*************************************************************************
-//  PeFile64
+// PeFile64
 **************************************************************************/
 
 PeFile64::PeFile64(InputFile *f) : super(f) {

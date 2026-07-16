@@ -35,6 +35,11 @@ static constexpr int has_builtin = 0;
 #else
 static constexpr int has_builtin = 1;
 #endif
+#if !defined(__has_cpp_attribute)
+static constexpr int has_cpp_attribute = 0;
+#else
+static constexpr int has_cpp_attribute = 1;
+#endif
 #if !defined(__has_declspec_attribute)
 static constexpr int has_declspec_attribute = 0;
 #else
@@ -138,7 +143,7 @@ struct PackerNames final {
     ~PackerNames() noexcept = default;
 
     static constexpr unsigned MAX_NAMES = 64; // arbitrary limit, increase as needed
-    struct Entry {
+    struct Entry final {
         const char *fname;
         const char *sname;
         unsigned methods_count;
@@ -626,12 +631,13 @@ void show_sysinfo(const char *options_var) {
 #if defined(_MSC_FULL_VER)
         cf_print("_MSC_FULL_VER", "%lld", _MSC_FULL_VER + 0);
 #endif
-        cf_print("__has_attribute", "%lld", has_attribute, 3);
-        cf_print("__has_builtin", "%lld", has_builtin, 3);
-        cf_print("__has_declspec_attribute", "%lld", has_declspec_attribute, 3);
-        cf_print("__has_feature", "%lld", has_feature, 3);
-        cf_print("__has_include", "%lld", has_include, 3);
-        cf_print("__has_warning", "%lld", has_warning, 3);
+        cf_print("__has_attribute", "%lld", has_attribute, 4);
+        cf_print("__has_builtin", "%lld", has_builtin, 4);
+        cf_print("__has_cpp_attribute", "%lld", has_cpp_attribute, 4);
+        cf_print("__has_declspec_attribute", "%lld", has_declspec_attribute, 4);
+        cf_print("__has_feature", "%lld", has_feature, 4);
+        cf_print("__has_include", "%lld", has_include, 4);
+        cf_print("__has_warning", "%lld", has_warning, 4);
 
         // architecture
 #if defined(__CHERI__)
@@ -709,11 +715,18 @@ void show_sysinfo(const char *options_var) {
         cf_print("__SIZEOF_POINTER__", "%lld", __SIZEOF_POINTER__ + 0, 3);
 #endif
         cf_print("__SIZEOF_SIZE_T__", "%lld", (long long) sizeof(size_t), 3);
+#if (ACC_ABI_BIG_ENDIAN)
+        cf_print("ACC_ABI_BIG_ENDIAN", "%lld", ACC_ABI_BIG_ENDIAN + 0, 4);
+#elif (ACC_ABI_LITTLE_ENDIAN)
+        cf_print("ACC_ABI_LITTLE_ENDIAN", "%lld", ACC_ABI_LITTLE_ENDIAN + 0, 4);
+#else
+#error "ACC_ABI_ENDIAN"
+#endif
 #if defined(UPX_CONFIG_DISABLE_WSTRICT)
-        cf_print("UPX_CONFIG_DISABLE_WSTRICT", "%lld", UPX_CONFIG_DISABLE_WSTRICT + 0, 3);
+        cf_print("UPX_CONFIG_DISABLE_WSTRICT", "%lld", UPX_CONFIG_DISABLE_WSTRICT + 0, 4);
 #endif
 #if defined(UPX_CONFIG_DISABLE_WERROR)
-        cf_print("UPX_CONFIG_DISABLE_WERROR", "%lld", UPX_CONFIG_DISABLE_WERROR + 0, 3);
+        cf_print("UPX_CONFIG_DISABLE_WERROR", "%lld", UPX_CONFIG_DISABLE_WERROR + 0, 4);
 #endif
 #if defined(DOCTEST_CONFIG_DISABLE)
         cf_print("DOCTEST_CONFIG_DISABLE", "%lld", DOCTEST_CONFIG_DISABLE + 0, 3);
