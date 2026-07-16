@@ -35,12 +35,15 @@
 
 inline bool mem_size_valid_bytes(upx_uint64_t bytes) noexcept { return bytes <= UPX_RSIZE_MAX; }
 
-bool mem_size_valid(upx_uint64_t element_size, upx_uint64_t n, upx_uint64_t extra1 = 0,
-                    upx_uint64_t extra2 = 0) noexcept;
+noinline bool mem_size_valid(upx_uint64_t element_size, upx_uint64_t n, upx_uint64_t extra1 = 0,
+                             upx_uint64_t extra2 = 0) noexcept;
 
 // will throw on invalid size
-upx_rsize_t mem_size(upx_uint64_t element_size, upx_uint64_t n, upx_uint64_t extra1,
-                     upx_uint64_t extra2 = 0) may_throw;
+noinline upx_rsize_t mem_size(upx_uint64_t element_size, upx_uint64_t n, upx_uint64_t extra1,
+                              upx_uint64_t extra2 = 0) may_throw;
+
+noinline upx_rsize_t mem_size_ptr(const void *ptr, upx_uint64_t element_size, upx_uint64_t n,
+                                  upx_uint64_t extra1 = 0, upx_uint64_t extra2 = 0) may_throw;
 
 //
 // inline fast paths:

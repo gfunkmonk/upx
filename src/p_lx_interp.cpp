@@ -223,7 +223,7 @@ void PackLinuxElf32x86interp::unpack(OutputFile *fo)
     if (file_size > (off_t)orig_file_size || blocksize > orig_file_size)
         throwCantUnpack("file header corrupted");
 
-    ibuf.alloc(blocksize + OVERHEAD);
+    ibuf.alloc(blocksize + OVERHEAD + (blocksize >> ELF_NRV_FUDGE));
     b_info bhdr; memset(&bhdr, 0, sizeof(bhdr));
     fi->readx(&bhdr, szb_info);
     ph.u_len = get_te32(&bhdr.sz_unc);
