@@ -147,6 +147,8 @@ jobs:
       - run: UPX_DEBUG_DOCTEST_VERBOSE=1 ./build/release/upx --sysinfo -vv
       - run: make build/debug+test
       - run: make build/release+test
+      # run: DESTDIR="$PWD/Install with cmake debug"   make build/debug+install
+      # run: DESTDIR="$PWD/Install with cmake release" make build/release+install
       - name: Run test suite
         run: |
           jobs="debug release"
@@ -841,7 +843,7 @@ jobs:
           echo -e '#!/bin/sh\n'$log'exec zig objcopy "$@"' > zig-objcopy
           echo -e '#!/bin/sh\n'$log'exec zig ranlib "$@"' > zig-ranlib
           chmod +x zig-ar zig-cc zig-cxx zig-objcopy zig-ranlib
-          ls -la; head zig-ar zig-cc zig-cxx zig-objcopy zig-ranlib
+          ls -laF; head zig-ar zig-cc zig-cxx zig-objcopy zig-ranlib
           # update ZIG_TARGET
           [[ $ZIG_TARGET == mips-linux-musleabi-* ]]     && ZIG_TARGET=mips-linux-musleabi
           [[ $ZIG_TARGET == mips-linux-musleabihf-* ]]   && ZIG_TARGET=mips-linux-musleabihf
